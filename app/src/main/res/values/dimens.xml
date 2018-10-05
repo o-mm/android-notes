@@ -1,0 +1,7 @@
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="text_margin">10dp</dimen>
+    <dimen name="title_margin">20dp</dimen>
+    <dimen name="note_height">100dp</dimen>
+    <dimen name="note_delim">5dp</dimen>
+</resources>
