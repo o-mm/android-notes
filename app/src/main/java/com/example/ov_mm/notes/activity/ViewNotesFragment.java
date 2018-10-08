@@ -11,14 +11,17 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.ov_mm.notes.R;
-import com.example.ov_mm.notes.activity.bl.EditViewController;
-import com.example.ov_mm.notes.activity.bl.ParcelableNote;
+import com.example.ov_mm.notes.bl.EditViewController;
+import com.example.ov_mm.notes.bl.ParcelableNote;
+
+import java.util.List;
 
 
 public class ViewNotesFragment extends Fragment {
 
-    private final EditViewController controller = new EditViewController();
-    private OnListFragmentInteractionListener mListener;
+    @NonNull
+    private final EditViewController mController = new EditViewController();
+    private NoteRecyclerViewAdapter mNoteAdapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -30,41 +33,43 @@ public class ViewNotesFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_view_notes, container, false);
 
-        if (view instanceof RecyclerView) {
-            Context context = view.getContext();
-            RecyclerView recyclerView = (RecyclerView) view;
-            recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            recyclerView.setAdapter(new NoteRecyclerViewAdapter(controller.getNotes(), mListener));
-        }
+        view.findViewById(R.id.add_note_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                toEditActivity(mController.createNote());
+            }
+        });
+
+        RecyclerView recyclerView = view.findViewById(R.id.note_recycle_view);
+        Context context = recyclerView.getContext();
+        recyclerView.setLayoutManager(new LinearLayoutManager(context));
+        mNoteAdapter = new NoteRecyclerViewAdapter(
+                new NoteRecyclerViewAdapter.NoteListSupplier() {
+                    @NonNull
+                    @Override
+                    public List<ParcelableNote> getNotes() {
+                        return mController.getNotes();
+                    }
+                },
+                new NoteRecyclerViewAdapter.OnListFragmentInteractionListener() {
+                    @Override
+                    public void onListFragmentInteraction(@NonNull ParcelableNote note) {
+                        toEditActivity(note);
+                    }
+                });
+        recyclerView.setAdapter(mNoteAdapter);
+
         return view;
     }
 
-
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnListFragmentInteractionListener) {
-            mListener = (OnListFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnListFragmentInteractionListener");
-        }
+    public void onResume() {
+        super.onResume();
+        mNoteAdapter.resetData();
+        mNoteAdapter.notifyDataSetChanged();
     }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     */
-    public interface OnListFragmentInteractionListener {
-
-        void onListFragmentInteraction(ParcelableNote item);
+    private void toEditActivity(@NonNull ParcelableNote item) {
+        EditNoteActivity.startActivity(requireContext(), item);
     }
 }

@@ -7,29 +7,34 @@
 
     <View
         android:background="@color/colorDelim"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="@dimen/note_delim"/>
 
     <TextView
-        android:id="@+id/note_date"
+        android:id="@+id/view_note_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/text_margin"
+        android:layout_marginStart="@dimen/text_margin"
+        android:layout_marginEnd="@dimen/text_margin"
         android:textAlignment="textEnd"/>
 
     <TextView
-        android:id="@+id/note_title"
+        android:id="@+id/view_note_title"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:maxLines="1"
         android:ellipsize="end"
-        android:textStyle="bold"/>
+        android:textStyle="bold"
+        android:layout_marginStart="@dimen/text_margin"
+        android:layout_marginEnd="@dimen/text_margin"/>
 
     <TextView
-        android:id="@+id/note_content"
+        android:id="@+id/view_note_content"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:maxLines="3"
-        android:ellipsize="end"/>
+        android:ellipsize="end"
+        android:layout_marginStart="@dimen/text_margin"
+        android:layout_marginEnd="@dimen/text_margin"/>
 
 </LinearLayout>
