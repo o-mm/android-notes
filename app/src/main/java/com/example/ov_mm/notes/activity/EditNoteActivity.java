@@ -6,9 +6,12 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
 import com.example.ov_mm.notes.R;
-import com.example.ov_mm.notes.model.Note;
+import com.example.ov_mm.notes.activity.bl.EditViewController;
+import com.example.ov_mm.notes.activity.bl.ParcelableNote;
 
 public class EditNoteActivity extends AppCompatActivity implements EditNoteFragment.NoteSupplierContext {
+
+    private final EditViewController controller = new EditViewController();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -18,10 +21,10 @@ public class EditNoteActivity extends AppCompatActivity implements EditNoteFragm
 
     @NonNull
     @Override
-    public Note getNote() {
-        Note note = getIntent().getParcelableExtra(ViewNotesActivity.EXTRA_ITEM_FOR_EDIT);
+    public ParcelableNote getNote() {
+        ParcelableNote note = getIntent().getParcelableExtra(ViewNotesActivity.EXTRA_ITEM_FOR_EDIT);
         if (note == null)
-            note = new Note();
+            note = controller.createNote();
         return note;
     }
 }

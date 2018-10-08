@@ -11,13 +11,15 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.example.ov_mm.notes.R;
-import com.example.ov_mm.notes.model.Note;
+import com.example.ov_mm.notes.activity.bl.EditViewController;
+import com.example.ov_mm.notes.activity.bl.ParcelableNote;
 
 import java.util.Objects;
 
 public class ViewNotesActivity extends AppCompatActivity implements ViewNotesFragment.OnListFragmentInteractionListener {
 
     public static final String EXTRA_ITEM_FOR_EDIT = "com.example.ov_mm.notes.activity.ITEM_FOR_EDIT";
+    private final EditViewController controller = new EditViewController();
     private Toolbar toolbar;
     private FloatingActionButton addNoteButton;
 
@@ -31,7 +33,7 @@ public class ViewNotesActivity extends AppCompatActivity implements ViewNotesFra
         addNoteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                toEditActivity(new Note());
+                toEditActivity(controller.createNote());
             }
         });
     }
@@ -59,11 +61,11 @@ public class ViewNotesActivity extends AppCompatActivity implements ViewNotesFra
     }
 
     @Override
-    public void onListFragmentInteraction(Note item) {
+    public void onListFragmentInteraction(ParcelableNote item) {
         toEditActivity(item);
     }
 
-    private void toEditActivity(@NonNull Note item) {
+    private void toEditActivity(@NonNull ParcelableNote item) {
         Intent intent = new Intent(this, EditNoteActivity.class);
         intent.putExtra(EXTRA_ITEM_FOR_EDIT, Objects.requireNonNull(item, "Item should not be null"));
         startActivity(intent);

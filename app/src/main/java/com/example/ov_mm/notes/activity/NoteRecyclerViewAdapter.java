@@ -10,20 +10,20 @@ import android.widget.TextView;
 
 import com.example.ov_mm.notes.R;
 import com.example.ov_mm.notes.activity.ViewNotesFragment.OnListFragmentInteractionListener;
-import com.example.ov_mm.notes.model.Note;
+import com.example.ov_mm.notes.activity.bl.ParcelableNote;
 
 import java.util.List;
 
 /**
- * {@link RecyclerView.Adapter} that can display a {@link Note} and makes a call to the
+ * {@link RecyclerView.Adapter} that can display a {@link ParcelableNote} and makes a call to the
  * specified {@link OnListFragmentInteractionListener}.
  */
 public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerViewAdapter.ViewHolder> {
 
-    private final List<Note> notes;
+    private final List<ParcelableNote> notes;
     private final OnListFragmentInteractionListener onSelectListener;
 
-    public NoteRecyclerViewAdapter(List<Note> items, OnListFragmentInteractionListener listener) {
+    public NoteRecyclerViewAdapter(List<ParcelableNote> items, OnListFragmentInteractionListener listener) {
         notes = items;
         onSelectListener = listener;
     }
@@ -38,7 +38,7 @@ public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerVi
 
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, int position) {
-        final Note note = notes.get(position);
+        final ParcelableNote note = notes.get(position);
         holder.titleView.setText(note.getTitle());
         holder.contentView.setText(note.getContent());
         holder.dateView.setText(DateFormat.format("yyyy-MM-dd HH:mm", note.getDate()));

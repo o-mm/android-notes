@@ -1,11 +1,8 @@
 package com.example.ov_mm.notes.model;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import java.util.Date;
 
-public class Note implements Parcelable {
+public class Note {
 
     private Long id;
 
@@ -14,24 +11,6 @@ public class Note implements Parcelable {
     private String title;
 
     private String content;
-
-    public static final Parcelable.Creator<Note> CREATOR = new Creator<Note>() {
-
-        @Override
-        public Note createFromParcel(Parcel source) {
-            Note note = new Note();
-            note.id = (Long) source.readValue(null);
-            note.title = (String) source.readValue(null);
-            note.content = (String) source.readValue(null);
-            note.date = (Date) source.readValue(null);
-            return note;
-        }
-
-        @Override
-        public Note[] newArray(int size) {
-            return new Note[size];
-        }
-    };
 
     public Long getId() {
         return id;
@@ -57,7 +36,6 @@ public class Note implements Parcelable {
         this.title = title;
     }
 
-
     public String getContent() {
         return content;
     }
@@ -73,18 +51,5 @@ public class Note implements Parcelable {
         note.title = title;
         note.content = content;
         return note;
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeValue(id);
-        dest.writeValue(title);
-        dest.writeValue(content);
-        dest.writeValue(date);
     }
 }

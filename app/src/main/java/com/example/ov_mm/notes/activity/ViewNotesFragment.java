@@ -11,12 +11,13 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.ov_mm.notes.R;
-import com.example.ov_mm.notes.model.Note;
-import com.example.ov_mm.notes.service.Dao;
+import com.example.ov_mm.notes.activity.bl.EditViewController;
+import com.example.ov_mm.notes.activity.bl.ParcelableNote;
 
 
 public class ViewNotesFragment extends Fragment {
 
+    private final EditViewController controller = new EditViewController();
     private OnListFragmentInteractionListener mListener;
 
     @Override
@@ -33,7 +34,7 @@ public class ViewNotesFragment extends Fragment {
             Context context = view.getContext();
             RecyclerView recyclerView = (RecyclerView) view;
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            recyclerView.setAdapter(new NoteRecyclerViewAdapter(new Dao().getNotes(), mListener));
+            recyclerView.setAdapter(new NoteRecyclerViewAdapter(controller.getNotes(), mListener));
         }
         return view;
     }
@@ -64,6 +65,6 @@ public class ViewNotesFragment extends Fragment {
      */
     public interface OnListFragmentInteractionListener {
 
-        void onListFragmentInteraction(Note item);
+        void onListFragmentInteraction(ParcelableNote item);
     }
 }

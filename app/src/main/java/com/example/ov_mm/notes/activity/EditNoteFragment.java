@@ -11,16 +11,14 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.example.ov_mm.notes.R;
-import com.example.ov_mm.notes.model.Note;
-import com.example.ov_mm.notes.service.Dao;
-
-import java.util.Date;
+import com.example.ov_mm.notes.activity.bl.EditViewController;
+import com.example.ov_mm.notes.activity.bl.ParcelableNote;
 
 public class EditNoteFragment extends Fragment {
 
-    private final Dao dao = new Dao();
+    private final EditViewController controller = new EditViewController();
     private NoteSupplierContext noteSupplier;
-    private Note note;
+    private ParcelableNote note;
     private EditText titleInput;
     private EditText contentInput;
 
@@ -65,8 +63,7 @@ public class EditNoteFragment extends Fragment {
         super.onPause();
         note.setTitle(titleInput.getText().toString());
         note.setContent(contentInput.getText().toString());
-        note.setDate(new Date());
-        dao.saveNote(note);
+        controller.saveNote(note);
     }
 
     @Override
@@ -78,6 +75,6 @@ public class EditNoteFragment extends Fragment {
     public interface NoteSupplierContext {
 
         @NonNull
-        Note getNote();
+        ParcelableNote getNote();
     }
 }
