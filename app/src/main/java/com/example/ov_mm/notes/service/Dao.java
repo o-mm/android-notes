@@ -39,6 +39,7 @@ public class Dao {
         return builder.toString();
     }
 
+    @NonNull
     public List<Note> getNotes() {
         ArrayList<Note> notes = new ArrayList<>(NOTES.values());
         Collections.sort(notes, new Comparator<Note>() {
@@ -50,7 +51,7 @@ public class Dao {
         return Collections.unmodifiableList(notes);
     }
 
-    public Note saveNote(Note note) {
+    public Note saveNote(@NonNull Note note) {
         if (note.getId() == null) {
             note.setId(sNoteId++);
         }

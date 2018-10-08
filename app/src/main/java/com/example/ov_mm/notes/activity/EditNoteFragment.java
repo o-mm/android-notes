@@ -1,6 +1,5 @@
 package com.example.ov_mm.notes.activity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -28,7 +27,7 @@ public class EditNoteFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
-            mNote = savedInstanceState.getParcelable(ViewNotesFragment.EXTRA_ITEM_FOR_EDIT);
+            mNote = savedInstanceState.getParcelable(EditNoteActivity.EXTRA_ITEM_FOR_EDIT);
         } else {
             mNote = mNoteSupplier.getNote();
         }
@@ -69,22 +68,18 @@ public class EditNoteFragment extends Fragment {
         String content = mContentInput.getText().toString();
         mNote.setTitle(title.isEmpty() ? null : title);
         mNote.setContent(content.isEmpty() ? null : content);
-        if (mController.saveNote(mNote)) {
-            mNoteSupplier.setResult(Activity.RESULT_OK);
-        }
+        mController.saveNote(mNote);
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(ViewNotesFragment.EXTRA_ITEM_FOR_EDIT, mNote);
+        outState.putParcelable(EditNoteActivity.EXTRA_ITEM_FOR_EDIT, mNote);
     }
 
     public interface NoteSupplierContext {
 
         @NonNull
         ParcelableNote getNote();
-
-        void setResult(int code);
     }
 }

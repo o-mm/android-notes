@@ -1,7 +1,6 @@
 package com.example.ov_mm.notes.activity;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -16,12 +15,10 @@ import com.example.ov_mm.notes.bl.EditViewController;
 import com.example.ov_mm.notes.bl.ParcelableNote;
 
 import java.util.List;
-import java.util.Objects;
 
 
 public class ViewNotesFragment extends Fragment {
 
-    public static final String EXTRA_ITEM_FOR_EDIT = "com.example.ov_mm.notes.activity.ITEM_FOR_EDIT";
     @NonNull
     private final EditViewController mController = new EditViewController();
     private NoteRecyclerViewAdapter mNoteAdapter;
@@ -47,7 +44,8 @@ public class ViewNotesFragment extends Fragment {
         Context context = recyclerView.getContext();
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
         mNoteAdapter = new NoteRecyclerViewAdapter(
-                new NoteRecyclerViewAdapter.NotesSupplier() {
+                new NoteRecyclerViewAdapter.NoteListSupplier() {
+                    @NonNull
                     @Override
                     public List<ParcelableNote> getNotes() {
                         return mController.getNotes();
@@ -55,7 +53,7 @@ public class ViewNotesFragment extends Fragment {
                 },
                 new NoteRecyclerViewAdapter.OnListFragmentInteractionListener() {
                     @Override
-                    public void onListFragmentInteraction(ParcelableNote note) {
+                    public void onListFragmentInteraction(@NonNull ParcelableNote note) {
                         toEditActivity(note);
                     }
                 });
@@ -72,8 +70,6 @@ public class ViewNotesFragment extends Fragment {
     }
 
     private void toEditActivity(@NonNull ParcelableNote item) {
-        Intent intent = new Intent(this.getContext(), EditNoteActivity.class);
-        intent.putExtra(EXTRA_ITEM_FOR_EDIT, Objects.requireNonNull(item, "Item should not be null"));
-        startActivity(intent);
+        EditNoteActivity.startActivity(requireContext(), item);
     }
 }

@@ -21,15 +21,15 @@ import java.util.List;
 public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerViewAdapter.ViewHolder> {
 
     @NonNull
-    private final NotesSupplier mNotesSupplier;
+    private final NoteListSupplier mNoteListSupplier;
     @Nullable
     private List<ParcelableNote> mNotes;
     @NonNull
     private final OnListFragmentInteractionListener mOnSelectListener;
 
-    public NoteRecyclerViewAdapter(@NonNull NotesSupplier notesSupplier,
+    public NoteRecyclerViewAdapter(@NonNull NoteListSupplier noteListSupplier,
                                    @NonNull OnListFragmentInteractionListener listener) {
-        this.mNotesSupplier = notesSupplier;
+        this.mNoteListSupplier = noteListSupplier;
         mOnSelectListener = listener;
     }
 
@@ -63,7 +63,7 @@ public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerVi
     @NonNull
     public List<ParcelableNote> getNotes() {
         if (mNotes == null) {
-            mNotes = mNotesSupplier.getNotes();
+            mNotes = mNoteListSupplier.getNotes();
         }
         return mNotes;
     }
@@ -72,14 +72,15 @@ public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerVi
         mNotes = null;
     }
 
-    public interface NotesSupplier {
+    public interface NoteListSupplier {
 
+        @NonNull
         List<ParcelableNote> getNotes();
     }
 
     public interface OnListFragmentInteractionListener {
 
-        void onListFragmentInteraction(ParcelableNote note);
+        void onListFragmentInteraction(@NonNull ParcelableNote note);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

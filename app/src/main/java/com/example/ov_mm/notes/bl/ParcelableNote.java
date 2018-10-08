@@ -2,6 +2,7 @@ package com.example.ov_mm.notes.bl;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import com.example.ov_mm.notes.model.Note;
 
@@ -10,10 +11,11 @@ import java.util.Objects;
 
 public class ParcelableNote implements Parcelable {
 
+    @NonNull
     private final Note mNote;
     private boolean mChanged;
 
-    ParcelableNote(Note note) {
+    ParcelableNote(@NonNull Note note) {
         this.mNote = note;
     }
 
@@ -60,6 +62,7 @@ public class ParcelableNote implements Parcelable {
         return mNote.getDate();
     }
 
+    @NonNull
     Note getNote() {
         return mNote;
     }
@@ -69,10 +72,11 @@ public class ParcelableNote implements Parcelable {
         @Override
         public ParcelableNote createFromParcel(Parcel source) {
             Note note = new Note();
-            note.setId((Long) source.readValue(null));
-            note.setTitle((String) source.readValue(null));
-            note.setContent((String) source.readValue(null));
-            note.setDate((Date) source.readValue(null));
+            ClassLoader classLoader = getClass().getClassLoader();
+            note.setId((Long) source.readValue(classLoader));
+            note.setTitle((String) source.readValue(classLoader));
+            note.setContent((String) source.readValue(classLoader));
+            note.setDate((Date) source.readValue(classLoader));
             return new ParcelableNote(note);
         }
 
