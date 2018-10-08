@@ -1,4 +1,4 @@
-package com.example.ov_mm.notes.activity.bl;
+package com.example.ov_mm.notes.bl;
 
 import com.example.ov_mm.notes.model.Note;
 import com.example.ov_mm.notes.service.Dao;
@@ -19,11 +19,16 @@ public class EditViewController {
         return result;
     }
 
-    public void saveNote(ParcelableNote note) {
+    /**
+     * @return true if saved, false if no changes detected
+     */
+    public boolean saveNote(ParcelableNote note) {
         if (note.isChanged()) {
             note.getNote().setDate(new Date());
             dao.saveNote(note.getNote());
+            return true;
         }
+        return false;
     }
 
     public void deleteNote(ParcelableNote note) {

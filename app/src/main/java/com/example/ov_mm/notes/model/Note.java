@@ -4,52 +4,52 @@ import java.util.Date;
 
 public class Note {
 
-    private Long id;
+    private Long mId;
 
-    private Date date;
+    private Date mDate;
 
-    private String title;
+    private String mTitle;
 
-    private String content;
+    private String mContent;
 
     public Long getId() {
-        return id;
+        return mId;
     }
 
     public void setId(Long id) {
-        this.id = id;
+        this.mId = id;
     }
 
     public Date getDate() {
-        return date;
+        return mDate;
     }
 
     public void setDate(Date date) {
-        this.date = date;
+        this.mDate = date;
     }
 
     public String getTitle() {
-        return title;
+        return mTitle;
     }
 
     public void setTitle(String title) {
-        this.title = title;
+        this.mTitle = title;
     }
 
     public String getContent() {
-        return content;
+        return mContent;
     }
 
     public void setContent(String content) {
-        this.content = content;
+        this.mContent = content;
     }
 
     public static Note create(Long id, Date date, String title, String content) {
         Note note = new Note();
-        note.id = id;
-        note.date = date;
-        note.title = title;
-        note.content = content;
+        note.mId = id;
+        note.mDate = date;
+        note.mTitle = title;
+        note.mContent = content;
         return note;
     }
 }

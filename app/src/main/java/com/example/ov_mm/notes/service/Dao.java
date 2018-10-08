@@ -17,24 +17,25 @@ public class Dao {
 
     private static final Map<Long, Note> NOTES = new HashMap<>();
 
-    private static long NOTE_ID = 1;
+    private static long sNoteId = 1;
 
     static {
-        while (NOTE_ID <= 30) {
+        while (sNoteId <= 30) {
             Calendar calendar = Calendar.getInstance();
-            calendar.set(2018, 0, (int) NOTE_ID, (int) Math.abs(24 - NOTE_ID), 0);
-            NOTES.put(NOTE_ID, Note.create(NOTE_ID, calendar.getTime(), "Note number " + NOTE_ID, generateContent(NOTE_ID)));
-            NOTE_ID++;
+            calendar.set(2018, 0, (int) sNoteId, (int) Math.abs(24 - sNoteId), 0);
+            NOTES.put(sNoteId, Note.create(sNoteId, calendar.getTime(), "Note number " + sNoteId, generateContent(sNoteId)));
+            sNoteId++;
         }
     }
 
     private static String generateContent(long id) {
         StringBuilder builder = new StringBuilder();
-        for (long i = 0; i < id / 2; i++)
+        for (long i = 0; i < id / 2; i++) {
             builder.append("Имена классов, полей, переменных и параметров должны выбираться из слов " +
                     "английского языка (использование транслитерации не допускается) " +
                     "либо устоявшихся аббревиатуры (при этом аббревиатуры следует использовать " +
                     "как слова). Не следует использовать малоизвестные аббревиатуры.\n");
+        }
         return builder.toString();
     }
 
@@ -50,8 +51,9 @@ public class Dao {
     }
 
     public Note saveNote(Note note) {
-        if (note.getId() == null)
-            note.setId(NOTE_ID++);
+        if (note.getId() == null) {
+            note.setId(sNoteId++);
+        }
         NOTES.put(note.getId(), note);
         return note;
     }

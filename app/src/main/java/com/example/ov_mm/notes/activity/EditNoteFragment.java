@@ -1,5 +1,6 @@
 package com.example.ov_mm.notes.activity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -11,70 +12,79 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.example.ov_mm.notes.R;
-import com.example.ov_mm.notes.activity.bl.EditViewController;
-import com.example.ov_mm.notes.activity.bl.ParcelableNote;
+import com.example.ov_mm.notes.bl.EditViewController;
+import com.example.ov_mm.notes.bl.ParcelableNote;
 
 public class EditNoteFragment extends Fragment {
 
-    private final EditViewController controller = new EditViewController();
-    private NoteSupplierContext noteSupplier;
-    private ParcelableNote note;
-    private EditText titleInput;
-    private EditText contentInput;
+    @NonNull
+    private final EditViewController mController = new EditViewController();
+    private NoteSupplierContext mNoteSupplier;
+    private ParcelableNote mNote;
+    private EditText mTitleInput;
+    private EditText mContentInput;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState != null)
-            note = savedInstanceState.getParcelable(ViewNotesActivity.EXTRA_ITEM_FOR_EDIT);
-        else
-            note = noteSupplier.getNote();
+        if (savedInstanceState != null) {
+            mNote = savedInstanceState.getParcelable(ViewNotesFragment.EXTRA_ITEM_FOR_EDIT);
+        } else {
+            mNote = mNoteSupplier.getNote();
+        }
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_edit_note, container, false);
-        titleInput = view.findViewById(R.id.title_edit_text);
-        contentInput = view.findViewById(R.id.content_edit_text);
-        titleInput.setText(note.getTitle());
-        contentInput.setText(note.getContent());
+        mTitleInput = view.findViewById(R.id.title_edit_text);
+        mContentInput = view.findViewById(R.id.content_edit_text);
+        mTitleInput.setText(mNote.getTitle());
+        mContentInput.setText(mNote.getContent());
         return view;
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof NoteSupplierContext)
-            noteSupplier = (NoteSupplierContext) context;
-        else
+        if (context instanceof NoteSupplierContext) {
+            mNoteSupplier = (NoteSupplierContext) context;
+        } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnListFragmentInteractionListener");
+                    + " must implement NoteSupplierContext");
+        }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        noteSupplier = null;
+        mNoteSupplier = null;
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        note.setTitle(titleInput.getText().toString());
-        note.setContent(contentInput.getText().toString());
-        controller.saveNote(note);
+        String title = mTitleInput.getText().toString();
+        String content = mContentInput.getText().toString();
+        mNote.setTitle(title.isEmpty() ? null : title);
+        mNote.setContent(content.isEmpty() ? null : content);
+        if (mController.saveNote(mNote)) {
+            mNoteSupplier.setResult(Activity.RESULT_OK);
+        }
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(ViewNotesActivity.EXTRA_ITEM_FOR_EDIT, note);
+        outState.putParcelable(ViewNotesFragment.EXTRA_ITEM_FOR_EDIT, mNote);
     }
 
     public interface NoteSupplierContext {
 
         @NonNull
         ParcelableNote getNote();
+
+        void setResult(int code);
     }
 }
