@@ -1,6 +1,5 @@
 package com.example.ov_mm.notes.activity;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -14,22 +13,37 @@ import com.example.ov_mm.notes.R;
 import com.example.ov_mm.notes.bl.EditViewController;
 import com.example.ov_mm.notes.bl.ParcelableNote;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class EditNoteFragment extends Fragment {
 
+    public static final String EXTRA_ITEM_FOR_EDIT = "com.example.ov_mm.notes.activity.ITEM_FOR_EDIT";
     @NonNull
     private final EditViewController mController = new EditViewController();
-    private NoteSupplierContext mNoteSupplier;
     private ParcelableNote mNote;
     private EditText mTitleInput;
     private EditText mContentInput;
+
+    public static EditNoteFragment createInstance(@NonNull ParcelableNote note) {
+        EditNoteFragment instance = new EditNoteFragment();
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(EXTRA_ITEM_FOR_EDIT, note);
+        instance.setArguments(bundle);
+        return instance;
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
-            mNote = savedInstanceState.getParcelable(EditNoteActivity.EXTRA_ITEM_FOR_EDIT);
-        } else {
-            mNote = mNoteSupplier.getNote();
+            mNote = savedInstanceState.getParcelable(EXTRA_ITEM_FOR_EDIT);
+        } else if (getArguments() != null) {
+            mNote = getArguments().getParcelable(EXTRA_ITEM_FOR_EDIT);
+        }
+        if (mNote == null) { //should not happen
+            mNote = mController.createNote();
+            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Unable to restore note from the state");
         }
     }
 
@@ -45,23 +59,6 @@ public class EditNoteFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof NoteSupplierContext) {
-            mNoteSupplier = (NoteSupplierContext) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement NoteSupplierContext");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mNoteSupplier = null;
-    }
-
-    @Override
     public void onPause() {
         super.onPause();
         String title = mTitleInput.getText().toString();
@@ -74,12 +71,6 @@ public class EditNoteFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(EditNoteActivity.EXTRA_ITEM_FOR_EDIT, mNote);
-    }
-
-    public interface NoteSupplierContext {
-
-        @NonNull
-        ParcelableNote getNote();
+        outState.putParcelable(EXTRA_ITEM_FOR_EDIT, mNote);
     }
 }

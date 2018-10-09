@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * {@link RecyclerView.Adapter} that can display a {@link ParcelableNote} and makes a call to the
- * specified {@link OnListFragmentInteractionListener}.
+ * specified {@link ViewNotesFragment.OnListItemInteractionListener}.
  */
 public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerViewAdapter.ViewHolder> {
 
@@ -25,10 +25,10 @@ public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerVi
     @Nullable
     private List<ParcelableNote> mNotes;
     @NonNull
-    private final OnListFragmentInteractionListener mOnSelectListener;
+    private final ViewNotesFragment.OnListItemInteractionListener mOnSelectListener;
 
     public NoteRecyclerViewAdapter(@NonNull NoteListSupplier noteListSupplier,
-                                   @NonNull OnListFragmentInteractionListener listener) {
+                                   @NonNull ViewNotesFragment.OnListItemInteractionListener listener) {
         this.mNoteListSupplier = noteListSupplier;
         mOnSelectListener = listener;
     }
@@ -50,7 +50,7 @@ public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerVi
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mOnSelectListener.onListFragmentInteraction(note);
+                mOnSelectListener.onListItemInteraction(note);
             }
         });
     }
@@ -76,11 +76,6 @@ public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerVi
 
         @NonNull
         List<ParcelableNote> getNotes();
-    }
-
-    public interface OnListFragmentInteractionListener {
-
-        void onListFragmentInteraction(@NonNull ParcelableNote note);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
