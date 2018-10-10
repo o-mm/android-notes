@@ -6,9 +6,10 @@ import com.example.ov_mm.notes.model.Note;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -40,15 +41,8 @@ public class Dao {
     }
 
     @NonNull
-    public List<Note> getNotes() {
-        ArrayList<Note> notes = new ArrayList<>(NOTES.values());
-        Collections.sort(notes, new Comparator<Note>() {
-            @Override
-            public int compare(Note o1, Note o2) {
-                return o2.getDate().compareTo(o1.getDate());
-            }
-        });
-        return Collections.unmodifiableList(notes);
+    public Collection<Note> getAllNotes() {
+        return Collections.unmodifiableCollection(NOTES.values());
     }
 
     public Note saveNote(@NonNull Note note) {
@@ -61,5 +55,20 @@ public class Dao {
 
     public void removeNote(@NonNull Note note) {
         NOTES.remove(note.getId());
+    }
+
+    @NonNull
+    public Collection<Note> getNotes(@NonNull String query) {
+        String lowerCaseQuery = query.toLowerCase();
+        List<Note> result = new ArrayList<>(NOTES.values());
+        Iterator<Note> iterator = result.iterator();
+        while (iterator.hasNext()) {
+            Note next = iterator.next();
+            if ((next.getTitle() == null || !next.getTitle().toLowerCase().contains(lowerCaseQuery)) && (
+                    next.getContent() == null || !next.getContent().toLowerCase().contains(lowerCaseQuery))) {
+                iterator.remove();
+            }
+        }
+        return Collections.unmodifiableCollection(result);
     }
 }
