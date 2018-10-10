@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,19 +14,17 @@ import com.example.ov_mm.notes.R;
 import com.example.ov_mm.notes.bl.EditViewController;
 import com.example.ov_mm.notes.bl.ParcelableNote;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 public class EditNoteFragment extends Fragment {
 
-    public static final String EXTRA_ITEM_FOR_EDIT = "com.example.ov_mm.notes.activity.ITEM_FOR_EDIT";
+    private static final String EXTRA_ITEM_FOR_EDIT = "com.example.ov_mm.notes.activity.ITEM_FOR_EDIT";
+    private static final String TAG = "EditNoteFragment";
     @NonNull
     private final EditViewController mController = new EditViewController();
     private ParcelableNote mNote;
     private EditText mTitleInput;
     private EditText mContentInput;
 
-    public static EditNoteFragment createInstance(@NonNull ParcelableNote note) {
+    public static EditNoteFragment newInstance(@NonNull ParcelableNote note) {
         EditNoteFragment instance = new EditNoteFragment();
         Bundle bundle = new Bundle();
         bundle.putParcelable(EXTRA_ITEM_FOR_EDIT, note);
@@ -43,7 +42,7 @@ public class EditNoteFragment extends Fragment {
         }
         if (mNote == null) { //should not happen
             mNote = mController.createNote();
-            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Unable to restore note from the state");
+            Log.e(TAG, "Unable to restore note from the state");
         }
     }
 
