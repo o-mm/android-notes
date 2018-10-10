@@ -20,11 +20,10 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <fragment android:name="com.example.ov_mm.notes.activity.ViewNotesFragment"
-        android:id="@+id/note_list_fragment"
-        android:layout_height="match_parent"
+    <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_gravity="center"
+        android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize"/>
 
 </android.support.design.widget.CoordinatorLayout>

@@ -22,6 +22,23 @@ public class ViewNotesFragment extends Fragment {
     @NonNull
     private final EditViewController mController = new EditViewController();
     private NoteRecyclerViewAdapter mNoteAdapter;
+    private OnListItemInteractionListener mInteractionListener;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnListItemInteractionListener) {
+            mInteractionListener = (OnListItemInteractionListener) context;
+        } else {
+            throw new UnsupportedOperationException("Fragment context must implement OnListItemInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mInteractionListener = null;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -36,7 +53,7 @@ public class ViewNotesFragment extends Fragment {
         view.findViewById(R.id.add_note_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                toEditActivity(mController.createNote());
+                mInteractionListener.onListItemInteraction(mController.createNote());
             }
         });
 
@@ -51,12 +68,7 @@ public class ViewNotesFragment extends Fragment {
                         return mController.getNotes();
                     }
                 },
-                new NoteRecyclerViewAdapter.OnListFragmentInteractionListener() {
-                    @Override
-                    public void onListFragmentInteraction(@NonNull ParcelableNote note) {
-                        toEditActivity(note);
-                    }
-                });
+                mInteractionListener);
         recyclerView.setAdapter(mNoteAdapter);
 
         return view;
@@ -69,7 +81,8 @@ public class ViewNotesFragment extends Fragment {
         mNoteAdapter.notifyDataSetChanged();
     }
 
-    private void toEditActivity(@NonNull ParcelableNote item) {
-        EditNoteActivity.startActivity(requireContext(), item);
+    public interface OnListItemInteractionListener {
+
+        void onListItemInteraction(@NonNull ParcelableNote note);
     }
 }
