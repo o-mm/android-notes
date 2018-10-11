@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,15 +20,19 @@ import com.example.ov_mm.notes.bl.SortProperty;
 import java.util.List;
 
 
-public class ViewNotesFragment extends Fragment implements SearchSortFragment.OnSearchSortListener {
+public class ViewNotesFragment extends Fragment implements SearchSortFragment.OnSearchSortListener, OnBackPressedHandler {
 
     @NonNull
     private final EditViewController mController = new EditViewController();
     private NoteRecyclerViewAdapter mNoteAdapter;
     private OnListItemInteractionListener mInteractionListener;
+    private View mBottomFragmentContainer;
 
+    @NonNull
     public static ViewNotesFragment newInstance() {
-        return new ViewNotesFragment();
+        ViewNotesFragment fragment = new ViewNotesFragment();
+        fragment.setArguments(new Bundle());
+        return fragment;
     }
 
     @Override
@@ -83,6 +88,7 @@ public class ViewNotesFragment extends Fragment implements SearchSortFragment.On
                 mInteractionListener.onListItemInteraction(mController.createNote());
             }
         });
+        mBottomFragmentContainer = view.findViewById(R.id.bottom_sheet_fragment);
         if (savedInstanceState == null) {
             getChildFragmentManager().beginTransaction().add(R.id.bottom_sheet_fragment, SearchSortFragment.newInstance()).commit();
         }
@@ -109,6 +115,17 @@ public class ViewNotesFragment extends Fragment implements SearchSortFragment.On
         resetListData();
     }
 
+    @Override
+    public boolean handleBackPressed() {
+        BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(mBottomFragmentContainer);
+        if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) {
+            return false;
+        } else {
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            return true;
+        }
+    }
+
     @NonNull
     private List<ParcelableNote> getNotesData() {
         SearchSortFragment searchSort = (SearchSortFragment) getChildFragmentManager().findFragmentById(R.id.bottom_sheet_fragment);
@@ -118,6 +135,7 @@ public class ViewNotesFragment extends Fragment implements SearchSortFragment.On
             return mController.getNotes(searchSort.getSearchString(), searchSort.getSortProperty(), searchSort.isDescOrder());
         }
     }
+
 
     private void resetListData() {
         mNoteAdapter.resetData();

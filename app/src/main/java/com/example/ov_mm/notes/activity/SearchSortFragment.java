@@ -26,8 +26,11 @@ public class SearchSortFragment extends Fragment {
     private Spinner mSortBySpinner;
     private ToggleButton mSortOrderButton;
 
+    @NonNull
     public static SearchSortFragment newInstance() {
-        return new SearchSortFragment();
+        SearchSortFragment fragment = new SearchSortFragment();
+        fragment.setArguments(new Bundle());
+        return fragment;
     }
 
     @Override

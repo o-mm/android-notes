@@ -50,13 +50,22 @@ public class ViewNotesActivity extends AppCompatActivity implements ViewNotesFra
     @Override
     public boolean onSupportNavigateUp() {
         requireActionBar().setDisplayHomeAsUpEnabled(false);
-        onBackPressed();
+        super.onBackPressed();
         return super.onSupportNavigateUp();
     }
 
     @NonNull
     private ActionBar requireActionBar() {
         return Objects.requireNonNull(getSupportActionBar(), "Action bar must be set");
+    }
+
+    @Override
+    public void onBackPressed() {
+        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (fragment instanceof OnBackPressedHandler && ((OnBackPressedHandler) fragment).handleBackPressed()) {
+            return;
+        }
+        super.onBackPressed();
     }
 
     @NonNull
@@ -81,6 +90,5 @@ public class ViewNotesActivity extends AppCompatActivity implements ViewNotesFra
                 }
             };
         }
-
     }
 }
