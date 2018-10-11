@@ -3,12 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="@dimen/note_height"
     android:background="@color/colorItem"
+    android:foreground="?attr/selectableItemBackground"
+    android:layout_marginTop="@dimen/note_delim"
     android:orientation="vertical">
-
-    <View
-        android:background="@color/colorDelim"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/note_delim"/>
 
     <TextView
         android:id="@+id/view_note_date"

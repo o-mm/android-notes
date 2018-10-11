@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:id="@+id/edit_note_layout"
     android:orientation="vertical"
+    android:layout_margin="@dimen/text_margin"
     app:layoutManager="android.support.v7.widget.LinearLayoutManager"
     tools:context=".activity.ViewNotesFragment">
 
@@ -17,7 +18,7 @@
             android:id="@+id/title_edit_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text"
+            android:inputType="textCapSentences"
             android:hint="@string/note_title"/>
     </android.support.design.widget.TextInputLayout>
 
@@ -30,7 +31,7 @@
             android:id="@+id/content_edit_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textMultiLine"
+            android:inputType="textCapSentences|textMultiLine"
             android:hint="@string/note_content"/>
     </android.support.design.widget.TextInputLayout>
 

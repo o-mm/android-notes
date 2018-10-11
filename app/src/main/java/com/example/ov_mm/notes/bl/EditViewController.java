@@ -19,7 +19,7 @@ public class EditViewController {
     private final Dao dao = new Dao();
 
     @NonNull
-    public List<ParcelableNote> getNotes(@Nullable String query, @Nullable final String sortBy, final boolean desc) {
+    public List<ParcelableNote> getNotes(@Nullable String query, @Nullable final SortProperty sortBy, final boolean desc) {
         List<ParcelableNote> result = new ArrayList<>();
         Collection<Note> notes = query == null ? dao.getAllNotes() : dao.getNotes(query);
         for (Note note : notes) {
@@ -29,9 +29,9 @@ public class EditViewController {
         Collections.sort(result, new Comparator<ParcelableNote>() {
             @Override
             public int compare(ParcelableNote o1, ParcelableNote o2) {
-                if ("Date".equals(sortBy)) {
+                if (SortProperty.DATE.equals(sortBy)) {
                     return o1.getDate().compareTo(o2.getDate()) * (desc ? -1 : 1);
-                } else if ("Title".equals(sortBy)) {
+                } else if (SortProperty.TITLE.equals(sortBy)) {
                     return o1.getTitle().compareTo(o2.getTitle()) * (desc ? -1 : 1);
                 } else {
                     return 0;
