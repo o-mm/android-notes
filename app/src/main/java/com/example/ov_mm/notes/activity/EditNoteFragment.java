@@ -24,6 +24,7 @@ public class EditNoteFragment extends Fragment {
     private EditText mTitleInput;
     private EditText mContentInput;
 
+    @NonNull
     public static EditNoteFragment newInstance(@NonNull ParcelableNote note) {
         EditNoteFragment instance = new EditNoteFragment();
         Bundle bundle = new Bundle();

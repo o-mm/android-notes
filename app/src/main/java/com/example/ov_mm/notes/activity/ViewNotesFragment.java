@@ -3,6 +3,8 @@ package com.example.ov_mm.notes.activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,16 +15,25 @@ import android.view.ViewGroup;
 import com.example.ov_mm.notes.R;
 import com.example.ov_mm.notes.bl.EditViewController;
 import com.example.ov_mm.notes.bl.ParcelableNote;
+import com.example.ov_mm.notes.bl.SortProperty;
 
 import java.util.List;
 
 
-public class ViewNotesFragment extends Fragment {
+public class ViewNotesFragment extends Fragment implements SearchSortFragment.OnSearchSortListener, OnBackPressedHandler {
 
     @NonNull
     private final EditViewController mController = new EditViewController();
     private NoteRecyclerViewAdapter mNoteAdapter;
     private OnListItemInteractionListener mInteractionListener;
+    private View mBottomFragmentContainer;
+
+    @NonNull
+    public static ViewNotesFragment newInstance() {
+        ViewNotesFragment fragment = new ViewNotesFragment();
+        fragment.setArguments(new Bundle());
+        return fragment;
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -50,12 +61,6 @@ public class ViewNotesFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_view_notes, container, false);
 
-        view.findViewById(R.id.add_note_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mInteractionListener.onListItemInteraction(mController.createNote());
-            }
-        });
 
         RecyclerView recyclerView = view.findViewById(R.id.note_recycle_view);
         Context context = recyclerView.getContext();
@@ -65,7 +70,7 @@ public class ViewNotesFragment extends Fragment {
                     @NonNull
                     @Override
                     public List<ParcelableNote> getNotes() {
-                        return mController.getNotes();
+                        return getNotesData();
                     }
                 },
                 mInteractionListener);
@@ -75,8 +80,64 @@ public class ViewNotesFragment extends Fragment {
     }
 
     @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        view.findViewById(R.id.add_note_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mInteractionListener.onListItemInteraction(mController.createNote());
+            }
+        });
+        mBottomFragmentContainer = view.findViewById(R.id.bottom_sheet_fragment);
+        if (savedInstanceState == null) {
+            getChildFragmentManager().beginTransaction().add(R.id.bottom_sheet_fragment, SearchSortFragment.newInstance()).commit();
+        }
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
+        resetListData();
+    }
+
+    @Override
+    public void onSearch() {
+        resetListData();
+    }
+
+    @Override
+    public void onSortPropertyChanged() {
+        resetListData();
+    }
+
+    @Override
+    public void onOrderChanged() {
+        resetListData();
+    }
+
+    @Override
+    public boolean handleBackPressed() {
+        BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(mBottomFragmentContainer);
+        if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) {
+            return false;
+        } else {
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            return true;
+        }
+    }
+
+    @NonNull
+    private List<ParcelableNote> getNotesData() {
+        SearchSortFragment searchSort = (SearchSortFragment) getChildFragmentManager().findFragmentById(R.id.bottom_sheet_fragment);
+        if (searchSort == null) {
+            return mController.getNotes(null, SortProperty.DATE, true);
+        } else {
+            return mController.getNotes(searchSort.getSearchString(), searchSort.getSortProperty(), searchSort.isDescOrder());
+        }
+    }
+
+
+    private void resetListData() {
         mNoteAdapter.resetData();
         mNoteAdapter.notifyDataSetChanged();
     }
