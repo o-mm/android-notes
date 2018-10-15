@@ -1,4 +1,4 @@
-package com.example.ov_mm.notes.activity;
+package com.example.ov_mm.notes.ui;
 
 public interface OnBackPressedHandler {
 

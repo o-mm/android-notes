@@ -1,5 +1,6 @@
-package com.example.ov_mm.notes.activity;
+package com.example.ov_mm.notes.ui;
 
+import android.arch.lifecycle.Observer;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -13,17 +14,14 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.ov_mm.notes.R;
-import com.example.ov_mm.notes.bl.EditViewController;
-import com.example.ov_mm.notes.bl.ParcelableNote;
-import com.example.ov_mm.notes.bl.SortProperty;
+import com.example.ov_mm.notes.repository.NoteWrapper;
+import com.example.ov_mm.notes.vm.ViewNotesVm;
 
 import java.util.List;
 
 
-public class ViewNotesFragment extends Fragment implements SearchSortFragment.OnSearchSortListener, OnBackPressedHandler {
+public class ViewNotesFragment extends Fragment implements OnBackPressedHandler {
 
-    @NonNull
-    private final EditViewController mController = new EditViewController();
     private NoteRecyclerViewAdapter mNoteAdapter;
     private OnListItemInteractionListener mInteractionListener;
     private View mBottomFragmentContainer;
@@ -60,22 +58,18 @@ public class ViewNotesFragment extends Fragment implements SearchSortFragment.On
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_view_notes, container, false);
-
-
         RecyclerView recyclerView = view.findViewById(R.id.note_recycle_view);
         Context context = recyclerView.getContext();
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
-        mNoteAdapter = new NoteRecyclerViewAdapter(
-                new NoteRecyclerViewAdapter.NoteListSupplier() {
-                    @NonNull
-                    @Override
-                    public List<ParcelableNote> getNotes() {
-                        return getNotesData();
-                    }
-                },
-                mInteractionListener);
+        mNoteAdapter = new NoteRecyclerViewAdapter(mInteractionListener);
         recyclerView.setAdapter(mNoteAdapter);
-
+        mInteractionListener.getViewVm().getNotes().observe(this, new Observer<List<NoteWrapper>>() {
+            @Override
+            public void onChanged(@Nullable List<NoteWrapper> notes) {
+                mNoteAdapter.updateData(notes);
+                mNoteAdapter.notifyDataSetChanged();
+            }
+        });
         return view;
     }
 
@@ -85,34 +79,24 @@ public class ViewNotesFragment extends Fragment implements SearchSortFragment.On
         view.findViewById(R.id.add_note_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mInteractionListener.onListItemInteraction(mController.createNote());
+                mInteractionListener.onListItemInteraction(mInteractionListener.getViewVm().createNote());
             }
         });
         mBottomFragmentContainer = view.findViewById(R.id.bottom_sheet_fragment);
-        if (savedInstanceState == null) {
+        if (getChildFragmentManager().findFragmentById(R.id.bottom_sheet_fragment) == null) {
             getChildFragmentManager().beginTransaction().add(R.id.bottom_sheet_fragment, SearchSortFragment.newInstance()).commit();
         }
     }
 
     @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
-        resetListData();
-    }
-
-    @Override
-    public void onSearch() {
-        resetListData();
-    }
-
-    @Override
-    public void onSortPropertyChanged() {
-        resetListData();
-    }
-
-    @Override
-    public void onOrderChanged() {
-        resetListData();
+        mInteractionListener.getViewVm().refreshNotes();
     }
 
     @Override
@@ -126,24 +110,10 @@ public class ViewNotesFragment extends Fragment implements SearchSortFragment.On
         }
     }
 
-    @NonNull
-    private List<ParcelableNote> getNotesData() {
-        SearchSortFragment searchSort = (SearchSortFragment) getChildFragmentManager().findFragmentById(R.id.bottom_sheet_fragment);
-        if (searchSort == null) {
-            return mController.getNotes(null, SortProperty.DATE, true);
-        } else {
-            return mController.getNotes(searchSort.getSearchString(), searchSort.getSortProperty(), searchSort.isDescOrder());
-        }
-    }
-
-
-    private void resetListData() {
-        mNoteAdapter.resetData();
-        mNoteAdapter.notifyDataSetChanged();
-    }
-
     public interface OnListItemInteractionListener {
 
-        void onListItemInteraction(@NonNull ParcelableNote note);
+        void onListItemInteraction(@NonNull NoteWrapper note);
+
+        ViewNotesVm getViewVm();
     }
 }

@@ -8,7 +8,7 @@
     android:orientation="vertical"
     android:layout_margin="@dimen/text_margin"
     app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-    tools:context=".activity.ViewNotesFragment">
+    tools:context=".ui.ViewNotesFragment">
 
     <android.support.design.widget.TextInputLayout
         android:id="@+id/title_input"

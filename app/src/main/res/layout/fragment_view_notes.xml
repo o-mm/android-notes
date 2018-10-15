@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-        tools:context=".activity.ViewNotesFragment"
+        tools:context=".ui.ViewNotesFragment"
         tools:listitem="@layout/item_view_note" />
 
     <android.support.design.widget.FloatingActionButton

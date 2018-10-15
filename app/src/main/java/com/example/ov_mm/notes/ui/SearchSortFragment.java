@@ -1,4 +1,4 @@
-package com.example.ov_mm.notes.activity;
+package com.example.ov_mm.notes.ui;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -17,11 +17,11 @@ import android.widget.Spinner;
 import android.widget.ToggleButton;
 
 import com.example.ov_mm.notes.R;
-import com.example.ov_mm.notes.bl.SortProperty;
+import com.example.ov_mm.notes.repository.SortProperty;
 
 public class SearchSortFragment extends Fragment {
 
-    private SearchSortListenerProvider mSearchSortProvider;
+    private SearchSortListenerProvider mListenerProvider;
     private SearchView mSearchView;
     private Spinner mSortBySpinner;
     private ToggleButton mSortOrderButton;
@@ -34,10 +34,15 @@ public class SearchSortFragment extends Fragment {
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         if (context instanceof SearchSortListenerProvider) {
-            mSearchSortProvider = (SearchSortListenerProvider) context;
+            mListenerProvider = (SearchSortListenerProvider) context;
         } else {
             throw new UnsupportedOperationException("Fragment context must implement SearchSortListenerProvider");
         }
@@ -46,7 +51,7 @@ public class SearchSortFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        mSearchSortProvider = null;
+        mListenerProvider = null;
     }
 
     @Nullable
@@ -66,12 +71,12 @@ public class SearchSortFragment extends Fragment {
         mSortBySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                mSearchSortProvider.getSearchSortListener().onSortPropertyChanged();
+                mListenerProvider.getSearchSortListener().onSortPropertyChanged(getSortProperty());
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                mSearchSortProvider.getSearchSortListener().onSortPropertyChanged();
+                mListenerProvider.getSearchSortListener().onSortPropertyChanged(getSortProperty());
             }
         });
 
@@ -98,7 +103,7 @@ public class SearchSortFragment extends Fragment {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (!hasFocus) {
-                    mSearchSortProvider.getSearchSortListener().onSearch();
+                    mListenerProvider.getSearchSortListener().onSearch(getSearchString());
                 }
             }
         });
@@ -107,7 +112,7 @@ public class SearchSortFragment extends Fragment {
         mSortOrderButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mSearchSortProvider.getSearchSortListener().onOrderChanged();
+                mListenerProvider.getSearchSortListener().onOrderChanged(isDescOrder());
             }
         });
 
@@ -120,6 +125,12 @@ public class SearchSortFragment extends Fragment {
                     mSearchView.clearFocus();
             }
         });
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        mListenerProvider.getSearchSortListener().init(getSearchString(), getSortProperty(), isDescOrder());
     }
 
     @Nullable
@@ -147,10 +158,12 @@ public class SearchSortFragment extends Fragment {
 
     public interface OnSearchSortListener {
 
-        void onSearch();
+        void init(@Nullable String term, @Nullable SortProperty sortProperty, boolean desc);
 
-        void onSortPropertyChanged();
+        void onSearch(@Nullable String term);
 
-        void onOrderChanged();
+        void onSortPropertyChanged(@Nullable SortProperty sortProperty);
+
+        void onOrderChanged(boolean desc);
     }
 }
