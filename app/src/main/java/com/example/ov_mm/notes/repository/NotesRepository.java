@@ -14,10 +14,17 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Inject;
+
 public class NotesRepository {
 
     @NonNull
-    private final Dao dao = new Dao();
+    private final Dao mDao;
+
+    @Inject
+    public NotesRepository(@NonNull Dao dao) {
+        this.mDao = dao;
+    }
 
     public void load(@NonNull MutableLiveData<List<NoteWrapper>> notes, @Nullable String query, @Nullable SortProperty sortBy, boolean desc) {
         notes.setValue(getNotes(query, sortBy, desc));
@@ -26,12 +33,12 @@ public class NotesRepository {
     public void saveNote(@NonNull NoteWrapper note) {
         if (note.isChanged()) {
             note.getNote().setDate(new Date());
-            dao.saveNote(note.getNote());
+            mDao.saveNote(note.getNote());
         }
     }
 
     public void deleteNote(@NonNull NoteWrapper note) {
-        dao.removeNote(note.getNote());
+        mDao.removeNote(note.getNote());
     }
 
     @NonNull
@@ -46,7 +53,7 @@ public class NotesRepository {
     @NonNull
     private List<NoteWrapper> getNotes(@Nullable String query, @Nullable final SortProperty sortBy, final boolean desc) {
         List<NoteWrapper> result = new ArrayList<>();
-        Collection<Note> notes = query == null ? dao.getAllNotes() : dao.getNotes(query);
+        Collection<Note> notes = query == null ? mDao.getAllNotes() : mDao.getNotes(query);
         for (Note note : notes) {
             result.add(new NoteWrapper(note));
         }
@@ -72,7 +79,7 @@ public class NotesRepository {
 
     @Nullable
     public NoteWrapper getNote(@NonNull Long id) {
-        Note note = dao.getNote(id);
+        Note note = mDao.getNote(id);
         if (note != null)
             return new NoteWrapper(note);
         else {

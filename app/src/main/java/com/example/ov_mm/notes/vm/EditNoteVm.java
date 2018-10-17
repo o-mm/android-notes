@@ -1,16 +1,19 @@
 package com.example.ov_mm.notes.vm;
 
-import android.arch.lifecycle.ViewModel;
+import android.app.Application;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.example.ov_mm.notes.di.BaseViewModel;
 import com.example.ov_mm.notes.repository.NoteWrapper;
-import com.example.ov_mm.notes.repository.NotesRepository;
 
-public class EditNoteVm extends ViewModel {
+public class EditNoteVm extends BaseViewModel {
 
     private NoteWrapper mNote;
-    private NotesRepository mRepository = new NotesRepository();
+
+    public EditNoteVm(@NonNull Application application) {
+        super(application);
+    }
 
     public void init(@Nullable Long id) {
         if (id != null)
