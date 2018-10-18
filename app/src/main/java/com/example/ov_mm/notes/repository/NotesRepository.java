@@ -1,6 +1,7 @@
 package com.example.ov_mm.notes.repository;
 
 import android.arch.lifecycle.MutableLiveData;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -8,7 +9,6 @@ import com.example.ov_mm.notes.model.Note;
 import com.example.ov_mm.notes.service.Dao;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -27,7 +27,7 @@ public class NotesRepository {
     }
 
     public void load(@NonNull MutableLiveData<List<NoteWrapper>> notes, @Nullable String query, @Nullable SortProperty sortBy, boolean desc) {
-        notes.setValue(getNotes(query, sortBy, desc));
+        new DataSelectionTask(mDao, notes, query, sortBy, desc).execute();
     }
 
     public void saveNote(@NonNull NoteWrapper note) {
@@ -48,16 +48,6 @@ public class NotesRepository {
 
     public void reorderNotes(MutableLiveData<List<NoteWrapper>> notes, String term, SortProperty sortProperty, boolean desc) {
         notes.setValue(reorderNotes(notes.getValue() == null ? Collections.<NoteWrapper>emptyList() : notes.getValue(), sortProperty, desc));
-    }
-
-    @NonNull
-    private List<NoteWrapper> getNotes(@Nullable String query, @Nullable final SortProperty sortBy, final boolean desc) {
-        List<NoteWrapper> result = new ArrayList<>();
-        Collection<Note> notes = query == null ? mDao.getAllNotes() : mDao.getNotes(query);
-        for (Note note : notes) {
-            result.add(new NoteWrapper(note));
-        }
-        return reorderNotes(result, sortBy, desc);
     }
 
     @NonNull
@@ -84,6 +74,40 @@ public class NotesRepository {
             return new NoteWrapper(note);
         else {
             return null;
+        }
+    }
+
+    public static class DataSelectionTask extends AsyncTask<Object, Void, List<NoteWrapper>> {
+
+        @NonNull private final Dao mDao;
+        @NonNull private final MutableLiveData<List<NoteWrapper>> mNotes;
+        @Nullable private final String mQuery;
+        @Nullable private final SortProperty mSortBy;
+        private final boolean mDesc;
+
+        public DataSelectionTask(@NonNull Dao dao, @NonNull MutableLiveData<List<NoteWrapper>> notes, @Nullable String query, @Nullable SortProperty sortBy,
+                                 boolean desc) {
+            mDao = dao;
+            mNotes = notes;
+            mQuery = query;
+            mSortBy = sortBy;
+            mDesc = desc;
+        }
+
+        @Override
+        protected List<NoteWrapper> doInBackground(Object... objects) {
+            List<NoteWrapper> result = new ArrayList<>();
+            List<Note> notes = mDao.getNotes(mQuery, mSortBy == null ? null : mSortBy.getDbColumn(), mDesc);
+            for (Note note : notes) {
+                result.add(new NoteWrapper(note));
+            }
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(List<NoteWrapper> noteWrappers) {
+            super.onPostExecute(noteWrappers);
+            mNotes.setValue(noteWrappers);
         }
     }
 }
