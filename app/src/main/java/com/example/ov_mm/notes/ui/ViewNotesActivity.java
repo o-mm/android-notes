@@ -12,13 +12,12 @@ import android.support.v7.widget.Toolbar;
 
 import com.example.ov_mm.notes.R;
 import com.example.ov_mm.notes.repository.NoteWrapper;
-import com.example.ov_mm.notes.vm.EditNoteVm;
 import com.example.ov_mm.notes.vm.ViewNotesVm;
 
 import java.util.Objects;
 
 public class ViewNotesActivity extends AppCompatActivity implements ViewNotesFragment.OnListItemInteractionListener,
-        SearchSortFragment.SearchSortListenerProvider, EditNoteFragment.EditNoteVmProvider {
+        SearchSortFragment.SearchSortListenerProvider {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +30,7 @@ public class ViewNotesActivity extends AppCompatActivity implements ViewNotesFra
                 requireActionBar().setDisplayHomeAsUpEnabled(getSupportFragmentManager().getBackStackEntryCount() > 0);
             }
         });
+        requireActionBar().setDisplayHomeAsUpEnabled(getSupportFragmentManager().getBackStackEntryCount() > 0);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, ViewNotesFragment.newInstance()).commit();
         }
@@ -78,11 +78,5 @@ public class ViewNotesActivity extends AppCompatActivity implements ViewNotesFra
     @Override
     public ViewNotesVm getViewVm() {
         return ViewModelProviders.of(this).get(ViewNotesVm.class);
-    }
-
-    @NonNull
-    @Override
-    public EditNoteVm getEditNoteVm() {
-        return ViewModelProviders.of(this).get(EditNoteVm.class);
     }
 }
