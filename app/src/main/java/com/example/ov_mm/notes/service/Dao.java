@@ -1,6 +1,7 @@
 package com.example.ov_mm.notes.service;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.example.ov_mm.notes.model.Note;
 
@@ -58,8 +59,8 @@ public class Dao {
     }
 
     @NonNull
-    public Collection<Note> getNotes(@NonNull String query) {
-        String lowerCaseQuery = query.toLowerCase();
+    public Collection<Note> getNotes(@NonNull String term) {
+        String lowerCaseQuery = term.toLowerCase();
         List<Note> result = new ArrayList<>(NOTES.values());
         Iterator<Note> iterator = result.iterator();
         while (iterator.hasNext()) {
@@ -70,5 +71,10 @@ public class Dao {
             }
         }
         return Collections.unmodifiableCollection(result);
+    }
+
+    @Nullable
+    public Note getNote(@NonNull Long id) {
+        return NOTES.get(id);
     }
 }

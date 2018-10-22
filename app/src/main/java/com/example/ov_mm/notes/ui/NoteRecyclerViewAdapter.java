@@ -1,4 +1,4 @@
-package com.example.ov_mm.notes.activity;
+package com.example.ov_mm.notes.ui;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -10,26 +10,23 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.ov_mm.notes.R;
-import com.example.ov_mm.notes.bl.ParcelableNote;
+import com.example.ov_mm.notes.repository.NoteWrapper;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
- * {@link RecyclerView.Adapter} that can display a {@link ParcelableNote} and makes a call to the
+ * {@link RecyclerView.Adapter} that can display a {@link NoteWrapper} and makes a call to the
  * specified {@link ViewNotesFragment.OnListItemInteractionListener}.
  */
 public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerViewAdapter.ViewHolder> {
 
-    @NonNull
-    private final NoteListSupplier mNoteListSupplier;
     @Nullable
-    private List<ParcelableNote> mNotes;
+    private List<NoteWrapper> mNotes;
     @NonNull
     private final ViewNotesFragment.OnListItemInteractionListener mOnSelectListener;
 
-    public NoteRecyclerViewAdapter(@NonNull NoteListSupplier noteListSupplier,
-                                   @NonNull ViewNotesFragment.OnListItemInteractionListener listener) {
-        this.mNoteListSupplier = noteListSupplier;
+    public NoteRecyclerViewAdapter(@NonNull ViewNotesFragment.OnListItemInteractionListener listener) {
         mOnSelectListener = listener;
     }
 
@@ -42,7 +39,7 @@ public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerVi
 
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, int position) {
-        final ParcelableNote note = getNotes().get(position);
+        final NoteWrapper note = getNotes().get(position);
         holder.mTitleView.setText(note.getTitle());
         holder.mContentView.setText(note.getContent());
         holder.mDateView.setText(DateFormat.format("yyyy-MM-dd HH:mm", note.getDate()));
@@ -61,21 +58,21 @@ public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerVi
     }
 
     @NonNull
-    public List<ParcelableNote> getNotes() {
+    public List<NoteWrapper> getNotes() {
         if (mNotes == null) {
-            mNotes = mNoteListSupplier.getNotes();
+            mNotes = Collections.emptyList();
         }
         return mNotes;
     }
 
-    public void resetData() {
-        mNotes = null;
+    public void updateData(List<NoteWrapper> notes) {
+        mNotes = notes;
     }
 
     public interface NoteListSupplier {
 
         @NonNull
-        List<ParcelableNote> getNotes();
+        List<NoteWrapper> getNotes();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
