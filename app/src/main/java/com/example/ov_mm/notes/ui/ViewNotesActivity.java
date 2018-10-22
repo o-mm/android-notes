@@ -19,10 +19,9 @@ import java.util.Objects;
 import javax.inject.Inject;
 
 public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment.OnListItemInteractionListener,
-        SearchSortFragment.SearchSortListenerProvider, EditNoteFragment.EditNoteVmProvider {
+        SearchSortFragment.SearchSortListenerProvider {
 
     @Inject ViewNotesVm mViewNotesVm;
-    @Inject EditNoteVm mEditNoteVm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,9 +32,10 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
         getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
             public void onBackStackChanged() {
-                requireActionBar().setDisplayHomeAsUpEnabled(getSupportFragmentManager().getBackStackEntryCount() > 0);
+                switchUpButton();
             }
         });
+        switchUpButton();
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, ViewNotesFragment.newInstance()).commit();
         }
@@ -57,11 +57,6 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
         requireActionBar().setDisplayHomeAsUpEnabled(false);
         super.onBackPressed();
         return super.onSupportNavigateUp();
-    }
-
-    @NonNull
-    private ActionBar requireActionBar() {
-        return Objects.requireNonNull(getSupportActionBar(), "Action bar must be set");
     }
 
     @Override
@@ -86,8 +81,11 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
     }
 
     @NonNull
-    @Override
-    public EditNoteVm getEditNoteVm() {
-        return mEditNoteVm;
+    private ActionBar requireActionBar() {
+        return Objects.requireNonNull(getSupportActionBar(), "Action bar must be set");
+    }
+
+    private void switchUpButton() {
+        requireActionBar().setDisplayHomeAsUpEnabled(getSupportFragmentManager().getBackStackEntryCount() > 0);
     }
 }

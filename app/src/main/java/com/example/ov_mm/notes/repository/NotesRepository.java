@@ -1,16 +1,15 @@
 package com.example.ov_mm.notes.repository;
 
-import android.arch.lifecycle.MutableLiveData;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.util.Consumer;
 
 import com.example.ov_mm.notes.model.Note;
 import com.example.ov_mm.notes.service.Dao;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -26,8 +25,8 @@ public class NotesRepository {
         this.mDao = dao;
     }
 
-    public void load(@NonNull MutableLiveData<List<NoteWrapper>> notes, @Nullable String query, @Nullable SortProperty sortBy, boolean desc) {
-        new DataSelectionTask(mDao, notes, query, sortBy, desc).execute();
+    public void load(@NonNull Consumer<List<NoteWrapper>> resultConsumer, @Nullable String query, @Nullable SortProperty sortBy, boolean desc) {
+        new DataSelectionTask(mDao, resultConsumer, query, sortBy, desc).execute();
     }
 
     public void saveNote(@NonNull NoteWrapper note) {
@@ -46,27 +45,6 @@ public class NotesRepository {
         return new NoteWrapper(new Note());
     }
 
-    public void reorderNotes(MutableLiveData<List<NoteWrapper>> notes, String term, SortProperty sortProperty, boolean desc) {
-        notes.setValue(reorderNotes(notes.getValue() == null ? Collections.<NoteWrapper>emptyList() : notes.getValue(), sortProperty, desc));
-    }
-
-    @NonNull
-    private List<NoteWrapper> reorderNotes(@NonNull List<NoteWrapper> notes, @Nullable final SortProperty sortBy, final boolean desc) {
-        Collections.sort(notes, new Comparator<NoteWrapper>() {
-            @Override
-            public int compare(NoteWrapper o1, NoteWrapper o2) {
-                if (SortProperty.DATE.equals(sortBy)) {
-                    return o1.getDate().compareTo(o2.getDate()) * (desc ? -1 : 1);
-                } else if (SortProperty.TITLE.equals(sortBy)) {
-                    return o1.getTitle().compareTo(o2.getTitle()) * (desc ? -1 : 1);
-                } else {
-                    return 0;
-                }
-            }
-        });
-        return notes;
-    }
-
     @Nullable
     public NoteWrapper getNote(@NonNull Long id) {
         Note note = mDao.getNote(id);
@@ -80,15 +58,15 @@ public class NotesRepository {
     public static class DataSelectionTask extends AsyncTask<Object, Void, List<NoteWrapper>> {
 
         @NonNull private final Dao mDao;
-        @NonNull private final MutableLiveData<List<NoteWrapper>> mNotes;
+        @NonNull private final Consumer<List<NoteWrapper>> mResultConsumer;
         @Nullable private final String mQuery;
         @Nullable private final SortProperty mSortBy;
         private final boolean mDesc;
 
-        public DataSelectionTask(@NonNull Dao dao, @NonNull MutableLiveData<List<NoteWrapper>> notes, @Nullable String query, @Nullable SortProperty sortBy,
+        public DataSelectionTask(@NonNull Dao dao, @NonNull Consumer<List<NoteWrapper>> resultConsumer,  @Nullable String query, @Nullable SortProperty sortBy,
                                  boolean desc) {
             mDao = dao;
-            mNotes = notes;
+            mResultConsumer = resultConsumer;
             mQuery = query;
             mSortBy = sortBy;
             mDesc = desc;
@@ -107,7 +85,7 @@ public class NotesRepository {
         @Override
         protected void onPostExecute(List<NoteWrapper> noteWrappers) {
             super.onPostExecute(noteWrappers);
-            mNotes.setValue(noteWrappers);
+            mResultConsumer.accept(noteWrappers);
         }
     }
 }
