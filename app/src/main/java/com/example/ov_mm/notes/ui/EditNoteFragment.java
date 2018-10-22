@@ -57,11 +57,6 @@ public class EditNoteFragment extends Fragment {
             @Override
             public void onChanged(@Nullable NoteWrapper noteWrapper) {
                 mTitleInput.setText(noteWrapper == null ? null : noteWrapper.getTitle());
-            }
-        });
-        mEditNoteVm.getNote().observe(this, new Observer<NoteWrapper>() {
-            @Override
-            public void onChanged(@Nullable NoteWrapper noteWrapper) {
                 mContentInput.setText(noteWrapper == null ? null : noteWrapper.getContent());
             }
         });
