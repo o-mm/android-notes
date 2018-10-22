@@ -75,7 +75,7 @@ public class ViewNotesVm extends BaseViewModel implements SearchSortFragment.OnS
     public void onSortPropertyChanged(@Nullable SortProperty sortProperty) {
         if (initialized) {
             mSortProperty = sortProperty;
-            reorderNotes(mNotes.getValue());
+            mNotes.setValue(reorderNotes(mNotes.getValue()));
         }
     }
 
