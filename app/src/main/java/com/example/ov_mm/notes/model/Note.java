@@ -53,13 +53,4 @@ public class Note {
     public void setContent(String content) {
         this.mContent = content;
     }
-
-    public static Note create(Long id, Date date, String title, String content) {
-        Note note = new Note();
-        note.mId = id;
-        note.mDate = date;
-        note.mTitle = title;
-        note.mContent = content;
-        return note;
-    }
 }

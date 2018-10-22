@@ -1,7 +1,7 @@
 package com.example.ov_mm.notes.di;
 
 import com.example.ov_mm.notes.repository.NotesRepository;
-import com.example.ov_mm.notes.service.Dao;
+import com.example.ov_mm.notes.service.dao.NotesDao;
 
 import javax.inject.Singleton;
 
@@ -13,7 +13,7 @@ class RepositoryModule {
 
     @Provides
     @Singleton
-    NotesRepository provideNotesRepository(Dao dao) {
-        return new NotesRepository(dao);
+    NotesRepository provideNotesRepository(NotesDao notesDao) {
+        return new NotesRepository(notesDao);
     }
 }

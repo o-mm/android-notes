@@ -4,7 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.example.ov_mm.notes.db.NotesDatabaseHelper;
-import com.example.ov_mm.notes.service.Dao;
+import com.example.ov_mm.notes.service.dao.NotesDao;
 
 import javax.inject.Singleton;
 
@@ -22,8 +22,8 @@ public class DaoModule {
 
     @Singleton
     @Provides
-    Dao provideDao(SQLiteDatabase db) {
-        return new Dao(db);
+    NotesDao provideDao(SQLiteDatabase db) {
+        return new NotesDao(db);
     }
 
     @Singleton
