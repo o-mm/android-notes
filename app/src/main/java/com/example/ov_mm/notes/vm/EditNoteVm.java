@@ -32,7 +32,7 @@ public class EditNoteVm extends ViewModel {
         return mNote;
     }
 
-    public void update(String title, String content) {
+    public void update(@Nullable String title, @Nullable String content) {
         NoteWrapper note = mNote.getValue();
         if (note != null) {
             note.setTitle(title);
