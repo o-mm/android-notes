@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -32,6 +33,7 @@ public class Dao {
 
     public Note saveNote(@NonNull Note note) {
         if (note.getId() == null || update(note) == 0) {
+            note.setGuid(UUID.randomUUID().toString());
             note.setId(insert(note));
         }
         return note;
@@ -78,6 +80,7 @@ public class Dao {
         while (cursor.moveToNext()) {
             Note note = new Note();
             note.setId(cursor.getLong(cursor.getColumnIndexOrThrow(NoteColumns.ID.getColumnName())));
+            note.setGuid(cursor.getString(cursor.getColumnIndexOrThrow(NoteColumns.GUID.getColumnName())));
             note.setDate(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(NoteColumns.DATE.getColumnName()))));
             note.setTitle(cursor.getString(cursor.getColumnIndexOrThrow(NoteColumns.TITLE.getColumnName())));
             note.setContent(cursor.getString(cursor.getColumnIndexOrThrow(NoteColumns.CONTENT.getColumnName())));
@@ -90,6 +93,7 @@ public class Dao {
     private ContentValues getValues(@NonNull Note note) {
         ContentValues values = new ContentValues();
         values.put(NoteColumns.TITLE.getColumnName(), note.getTitle());
+        values.put(NoteColumns.GUID.getColumnName(), note.getGuid());
         values.put(NoteColumns.CONTENT.getColumnName(), note.getContent());
         values.put(NoteColumns.DATE.getColumnName(), note.getDate().getTime());
         return values;

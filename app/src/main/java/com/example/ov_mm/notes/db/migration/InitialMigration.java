@@ -5,14 +5,19 @@ import android.support.annotation.NonNull;
 import com.example.ov_mm.notes.db.NoteColumns;
 
 import java.util.Calendar;
+import java.util.UUID;
 
 public class InitialMigration implements Migration {
 
     @NonNull
     @Override
     public String getMigration() {
-        return String.format("INSERT INTO %s (%s, %s, %s) VALUES " + generateValues() + ";",
-                NoteColumns.TABLE_NAME, NoteColumns.TITLE.getColumnName(), NoteColumns.CONTENT.getColumnName(), NoteColumns.DATE.getColumnName());
+        return String.format("INSERT INTO %s (%s, %s, %s, %s) VALUES " + generateValues() + ";",
+                NoteColumns.TABLE_NAME,
+                NoteColumns.GUID.getColumnName(),
+                NoteColumns.TITLE.getColumnName(),
+                NoteColumns.CONTENT.getColumnName(),
+                NoteColumns.DATE.getColumnName());
     }
 
     @NonNull
@@ -24,7 +29,8 @@ public class InitialMigration implements Migration {
             }
             Calendar calendar = Calendar.getInstance();
             calendar.set(2018, 0, i, Math.abs(24 - i), 0);
-            values.append("('Note number ").append(i + 1).append("', '");
+            values.append("('").append(UUID.randomUUID()).append("',");
+            values.append("'Note number ").append(i + 1).append("', '");
             values.append(generateContent(i + 1)).append("', ");
             values.append(calendar.getTimeInMillis()).append(")");
         }

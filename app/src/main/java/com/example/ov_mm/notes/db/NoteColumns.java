@@ -2,6 +2,7 @@ package com.example.ov_mm.notes.db;
 
 public enum NoteColumns implements NotesDatabaseContract.TableDefinition {
     ID("id", "INTEGER PRIMARY KEY"),
+    GUID("guid", "TEXT"),
     TITLE("title", "TEXT"),
     CONTENT("content", "TEXT"),
     DATE("date", "DATETIME");

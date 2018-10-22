@@ -6,6 +6,8 @@ public class Note {
 
     private Long mId;
 
+    private String guid;
+
     private Date mDate;
 
     private String mTitle;
@@ -18,6 +20,14 @@ public class Note {
 
     public void setId(Long id) {
         this.mId = id;
+    }
+
+    public String getGuid() {
+        return guid;
+    }
+
+    public void setGuid(String guid) {
+        this.guid = guid;
     }
 
     public Date getDate() {
