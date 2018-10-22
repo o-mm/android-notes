@@ -9,7 +9,6 @@ import com.example.ov_mm.notes.model.Note;
 import com.example.ov_mm.notes.service.Dao;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -25,7 +24,7 @@ public class NotesRepository {
         this.mDao = dao;
     }
 
-    public void load(@NonNull Consumer<List<NoteWrapper>> resultConsumer, @Nullable String query, @Nullable SortProperty sortBy, boolean desc) {
+    public void loadNotes(@NonNull Consumer<List<NoteWrapper>> resultConsumer, @Nullable String query, @Nullable SortProperty sortBy, boolean desc) {
         new DataSelectionTask(mDao, resultConsumer, query, sortBy, desc).execute();
     }
 

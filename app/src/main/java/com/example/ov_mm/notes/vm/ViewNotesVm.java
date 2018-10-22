@@ -93,7 +93,7 @@ public class ViewNotesVm extends BaseViewModel implements SearchSortFragment.OnS
             public void accept(List<NoteWrapper> notes) {
                 mNotes.setValue(reorderNotes(notes));
             }
-        }, mTerm);
+        }, mTerm, mSortProperty, mDesc);
     }
 
     @NonNull
