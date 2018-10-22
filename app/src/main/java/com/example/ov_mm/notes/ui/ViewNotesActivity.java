@@ -27,10 +27,10 @@ public class ViewNotesActivity extends AppCompatActivity implements ViewNotesFra
         getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
             public void onBackStackChanged() {
-                requireActionBar().setDisplayHomeAsUpEnabled(getSupportFragmentManager().getBackStackEntryCount() > 0);
+                switchUpButton();
             }
         });
-        requireActionBar().setDisplayHomeAsUpEnabled(getSupportFragmentManager().getBackStackEntryCount() > 0);
+        switchUpButton();
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, ViewNotesFragment.newInstance()).commit();
         }
@@ -54,11 +54,6 @@ public class ViewNotesActivity extends AppCompatActivity implements ViewNotesFra
         return super.onSupportNavigateUp();
     }
 
-    @NonNull
-    private ActionBar requireActionBar() {
-        return Objects.requireNonNull(getSupportActionBar(), "Action bar must be set");
-    }
-
     @Override
     public void onBackPressed() {
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
@@ -78,5 +73,14 @@ public class ViewNotesActivity extends AppCompatActivity implements ViewNotesFra
     @Override
     public ViewNotesVm getViewVm() {
         return ViewModelProviders.of(this).get(ViewNotesVm.class);
+    }
+
+    @NonNull
+    private ActionBar requireActionBar() {
+        return Objects.requireNonNull(getSupportActionBar(), "Action bar must be set");
+    }
+
+    private void switchUpButton() {
+        requireActionBar().setDisplayHomeAsUpEnabled(getSupportFragmentManager().getBackStackEntryCount() > 0);
     }
 }

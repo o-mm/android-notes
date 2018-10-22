@@ -1,5 +1,6 @@
 package com.example.ov_mm.notes.ui;
 
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -12,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.example.ov_mm.notes.R;
+import com.example.ov_mm.notes.repository.NoteWrapper;
 import com.example.ov_mm.notes.vm.EditNoteVm;
 
 public class EditNoteFragment extends Fragment {
@@ -50,11 +52,20 @@ public class EditNoteFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_edit_note, container, false);
         mTitleInput = view.findViewById(R.id.title_edit_text);
         mContentInput = view.findViewById(R.id.content_edit_text);
+
+        mEditNoteVm.getNote().observe(this, new Observer<NoteWrapper>() {
+            @Override
+            public void onChanged(@Nullable NoteWrapper noteWrapper) {
+                mTitleInput.setText(noteWrapper == null ? null : noteWrapper.getTitle());
+            }
+        });
+        mEditNoteVm.getNote().observe(this, new Observer<NoteWrapper>() {
+            @Override
+            public void onChanged(@Nullable NoteWrapper noteWrapper) {
+                mContentInput.setText(noteWrapper == null ? null : noteWrapper.getContent());
+            }
+        });
         mEditNoteVm.init(mNoteId);
-        if (mNoteId != null) {
-            mTitleInput.setText(mEditNoteVm.getNote().getTitle());
-            mContentInput.setText(mEditNoteVm.getNote().getContent());
-        }
         return view;
     }
 

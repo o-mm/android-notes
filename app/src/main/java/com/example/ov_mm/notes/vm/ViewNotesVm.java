@@ -20,11 +20,11 @@ import java.util.Objects;
 public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearchSortListener {
 
     private boolean initialized;
-    private MutableLiveData<List<NoteWrapper>> mNotes;
-    private String mTerm;
-    private SortProperty mSortProperty;
+    @NonNull private final MutableLiveData<List<NoteWrapper>> mNotes = new MutableLiveData<>();
+    @Nullable private String mTerm;
+    @Nullable private SortProperty mSortProperty;
     private boolean mDesc;
-    private NotesRepository mNotesRepository = new NotesRepository();
+    @NonNull private final NotesRepository mNotesRepository = new NotesRepository();
     @NonNull private final Comparator defaultComparator = new Comparator<Comparable>() {
         @Override
         public int compare(Comparable o1, Comparable o2) {
@@ -38,7 +38,7 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
         }
     };
 
-    public void init(String term, SortProperty sortProperty, boolean desc) {
+    public void init(@Nullable String term, @Nullable SortProperty sortProperty, boolean desc) {
         if (!initialized) {
             initialized = true;
             mTerm = term;
@@ -50,9 +50,6 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
 
     @NonNull
     public LiveData<List<NoteWrapper>> getNotes() {
-        if (mNotes == null) {
-            mNotes = new MutableLiveData<>();
-        }
         return mNotes;
     }
 
@@ -95,6 +92,7 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
         }, mTerm);
     }
 
+    @NonNull
     public NoteWrapper createNote() {
         return mNotesRepository.createNote();
     }
