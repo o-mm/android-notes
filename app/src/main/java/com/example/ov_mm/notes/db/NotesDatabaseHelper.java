@@ -18,28 +18,32 @@ public class NotesDatabaseHelper extends SQLiteOpenHelper {
         super(context, DATABASE_NAME, null, NotesDatabaseContract.MIGRATIONS.size() + 1);
     }
 
+    public static void buildCreateTableQuery(Class<? extends NotesDatabaseContract.TableDefinition> cls, StringBuilder builder) {
+        if (!cls.isEnum())
+            throw new UnsupportedOperationException("All classes describing tables must be enums");
+        NotesDatabaseContract.TableDefinition[] columns = cls.getEnumConstants();
+        builder
+                .append("CREATE TABLE ")
+                .append(columns[0].getTableName())
+                .append(" (\n");
+
+        for (int i = 0; i < columns.length; i++) {
+            if (i > 0) {
+                builder.append(", \n");
+            }
+            builder
+                    .append(columns[i].getColumnName())
+                    .append(" ")
+                    .append(columns[i].getDefinition());
+        }
+        builder.append(");\n");
+    }
+
     @Override
     public void onCreate(SQLiteDatabase db) {
         StringBuilder createQuery = new StringBuilder();
         for (Class<? extends NotesDatabaseContract.TableDefinition> cls : NotesDatabaseContract.TABLES) {
-            if (!cls.isEnum())
-                throw new UnsupportedOperationException("All classes describing tables must be enums");
-            NotesDatabaseContract.TableDefinition[] columns = cls.getEnumConstants();
-            createQuery
-                    .append("CREATE TABLE ")
-                    .append(columns[0].getTableName())
-                    .append(" (\n");
-
-            for (int i = 0; i < columns.length; i++) {
-                if (i > 0) {
-                    createQuery.append(", \n");
-                }
-                createQuery
-                        .append(columns[i].getColumnName())
-                        .append(" ")
-                        .append(columns[i].getDefinition());
-            }
-            createQuery.append(");\n");
+            buildCreateTableQuery(cls, createQuery);
         }
         db.execSQL(createQuery.toString());
         db.execSQL(new InitialMigration().getMigration());

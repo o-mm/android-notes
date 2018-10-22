@@ -6,13 +6,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.example.ov_mm.notes.db.NoteColumns;
+import com.example.ov_mm.notes.db.tables.NoteColumns;
 import com.example.ov_mm.notes.model.Note;
 import com.example.ov_mm.notes.util.Function;
 import com.example.ov_mm.notes.util.ListUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -125,5 +126,9 @@ public class NotesDao {
                 orderBy)) {
             return readFromCursor(cursor);
         }
+    }
+
+    public void saveNotes(Collection<Note> notes) {
+
     }
 }

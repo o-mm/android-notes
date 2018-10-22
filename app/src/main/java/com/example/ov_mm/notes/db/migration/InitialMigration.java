@@ -2,7 +2,7 @@ package com.example.ov_mm.notes.db.migration;
 
 import android.support.annotation.NonNull;
 
-import com.example.ov_mm.notes.db.NoteColumns;
+import com.example.ov_mm.notes.db.tables.NoteColumns;
 
 import java.util.Calendar;
 import java.util.UUID;

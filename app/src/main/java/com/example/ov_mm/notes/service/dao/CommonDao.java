@@ -3,6 +3,8 @@ package com.example.ov_mm.notes.service.dao;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 
+import java.util.Date;
+
 import javax.inject.Inject;
 
 public class CommonDao {
@@ -23,5 +25,14 @@ public class CommonDao {
 
     public Long getLastSyncTime() {
         return null;
+    }
+
+    /**
+     * @param version version of notes data from server
+     * @param startDate date
+     * @return true if syncTime is greater than value in DB, false otherwise
+     */
+    public boolean updateVersion(Long version, Date startDate) {
+
     }
 }

@@ -1,17 +1,19 @@
-package com.example.ov_mm.notes.db;
+package com.example.ov_mm.notes.db.tables;
 
-public enum NoteColumns implements NotesDatabaseContract.TableDefinition {
+import com.example.ov_mm.notes.db.NotesDatabaseContract;
+
+public enum CommonData implements NotesDatabaseContract.TableDefinition {
     ID("id", "INTEGER PRIMARY KEY"),
+    KEY("key", "TEXT"),
     GUID("guid", "TEXT"),
-    TITLE("title", "TEXT"),
-    CONTENT("content", "TEXT"),
-    DATE("date", "DATETIME");
+    TIME("sync_time", "DATETIME"),
+    VERSION("version", "INTEGER");
 
-    public static final String TABLE_NAME = "notes";
+    public static final String TABLE_NAME = "common_data";
     private final String mColumn;
     private final String mDefinition;
 
-    NoteColumns(String column, String definition) {
+    CommonData(String column, String definition) {
         this.mColumn = column;
         this.mDefinition = definition;
     }

@@ -1,6 +1,6 @@
 package com.example.ov_mm.notes.repository;
 
-import com.example.ov_mm.notes.db.NoteColumns;
+import com.example.ov_mm.notes.db.tables.NoteColumns;
 
 public enum SortProperty {
     DATE(NoteColumns.DATE),
