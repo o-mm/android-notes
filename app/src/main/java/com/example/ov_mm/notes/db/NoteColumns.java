@@ -1,5 +1,7 @@
 package com.example.ov_mm.notes.db;
 
+import android.support.annotation.NonNull;
+
 public enum NoteColumns implements NotesDatabaseContract.TableDefinition {
     ID("id", "INTEGER PRIMARY KEY"),
     TITLE("title", "TEXT"),
@@ -15,15 +17,20 @@ public enum NoteColumns implements NotesDatabaseContract.TableDefinition {
         this.mDefinition = definition;
     }
 
+    @NonNull
     @Override
     public String getTableName() {
         return TABLE_NAME;
     }
 
+    @NonNull
+    @Override
     public String getColumnName() {
         return mColumn;
     }
 
+    @NonNull
+    @Override
     public String getDefinition() {
         return mDefinition;
     }

@@ -16,20 +16,18 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import javax.inject.Inject;
-
 public class Dao {
 
     @NonNull private final SQLiteDatabase mDatabase;
     @NonNull private final List<NoteColumns> mSearchColumns = Arrays.asList(NoteColumns.TITLE, NoteColumns.CONTENT);
 
-    @Inject
     public Dao(@NonNull SQLiteDatabase db) {
         if (db.isReadOnly())
             throw new IllegalStateException("Database must be writable");
         mDatabase = db;
     }
 
+    @NonNull
     public Note saveNote(@NonNull Note note) {
         if (note.getId() == null || update(note) == 0) {
             note.setId(insert(note));
@@ -73,6 +71,7 @@ public class Dao {
         return notes.get(0);
     }
 
+    @NonNull
     private List<Note> readFromCursor(Cursor cursor) {
         List<Note> result = new ArrayList<>();
         while (cursor.moveToNext()) {
