@@ -1,80 +1,125 @@
 package com.example.ov_mm.notes.service;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.example.ov_mm.notes.db.NoteColumns;
 import com.example.ov_mm.notes.model.Note;
+import com.example.ov_mm.notes.util.Function;
+import com.example.ov_mm.notes.util.ListUtils;
 
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
-//TODO database
 public class Dao {
 
-    private static final Map<Long, Note> NOTES = new HashMap<>();
+    @NonNull private final SQLiteDatabase mDatabase;
+    @NonNull private final List<NoteColumns> mSearchColumns = Arrays.asList(NoteColumns.TITLE, NoteColumns.CONTENT);
 
-    private static long sNoteId = 1;
-
-    static {
-        while (sNoteId <= 30) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(2018, 0, (int) sNoteId, (int) Math.abs(24 - sNoteId), 0);
-            NOTES.put(sNoteId, Note.create(sNoteId, calendar.getTime(), "Note number " + sNoteId, generateContent(sNoteId)));
-            sNoteId++;
+    public Dao(@NonNull SQLiteDatabase db) {
+        if (db.isReadOnly()) {
+            throw new IllegalStateException("Database must be writable");
         }
-    }
-
-    private static String generateContent(long id) {
-        StringBuilder builder = new StringBuilder();
-        for (long i = 0; i < id / 2; i++) {
-            builder.append("Имена классов, полей, переменных и параметров должны выбираться из слов " +
-                    "английского языка (использование транслитерации не допускается) " +
-                    "либо устоявшихся аббревиатуры (при этом аббревиатуры следует использовать " +
-                    "как слова). Не следует использовать малоизвестные аббревиатуры.\n");
-        }
-        return builder.toString();
+        mDatabase = db;
     }
 
     @NonNull
-    public Collection<Note> getAllNotes() {
-        return Collections.unmodifiableCollection(NOTES.values());
-    }
-
     public Note saveNote(@NonNull Note note) {
-        if (note.getId() == null) {
-            note.setId(sNoteId++);
+        if (note.getId() == null || update(note) == 0) {
+            note.setId(insert(note));
         }
-        NOTES.put(note.getId(), note);
         return note;
     }
 
     public void removeNote(@NonNull Note note) {
-        NOTES.remove(note.getId());
+        if (note.getId() == null) {
+            return; //does not exist in DB
+        }
+        mDatabase.delete(NoteColumns.TABLE_NAME, NoteColumns.ID.getColumnName() + " = ?", new String[]{note.getId().toString()});
     }
 
     @NonNull
-    public Collection<Note> getNotes(@NonNull String term) {
-        String lowerCaseQuery = term.toLowerCase();
-        List<Note> result = new ArrayList<>(NOTES.values());
-        Iterator<Note> iterator = result.iterator();
-        while (iterator.hasNext()) {
-            Note next = iterator.next();
-            if ((next.getTitle() == null || !next.getTitle().toLowerCase().contains(lowerCaseQuery)) && (
-                    next.getContent() == null || !next.getContent().toLowerCase().contains(lowerCaseQuery))) {
-                iterator.remove();
-            }
+    public List<Note> getNotes(@Nullable String term, @Nullable NoteColumns column, boolean desc) {
+        String orderBy = column == null ? null : column.getColumnName() + (desc ? " DESC" : " ASC");
+        if (term == null) {
+            return executeQuery(null, null, orderBy);
         }
-        return Collections.unmodifiableCollection(result);
+        StringBuilder where = new StringBuilder();
+        for (NoteColumns col : mSearchColumns) {
+            if (where.length() != 0) {
+                where.append(" OR ");
+            }
+            where.append("lower(").append(col.getColumnName()).append(") LIKE ?");
+        }
+        String[] params = new String[mSearchColumns.size()];
+        Arrays.fill(params, "%" + term.toLowerCase() + "%");
+        return executeQuery(where.toString(), params, orderBy);
     }
 
     @Nullable
     public Note getNote(@NonNull Long id) {
-        return NOTES.get(id);
+        List<Note> notes = executeQuery(NoteColumns.ID + " = ?", new String[]{id.toString()}, null);
+        if (notes.isEmpty()) {
+            return null;
+        } else if (notes.size() > 1) {
+            throw new IllegalStateException("There are more than one note with the same ID in DB");
+        }
+        return notes.get(0);
+    }
+
+    @NonNull
+    private List<Note> readFromCursor(Cursor cursor) {
+        List<Note> result = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            Note note = new Note();
+            note.setId(cursor.getLong(cursor.getColumnIndexOrThrow(NoteColumns.ID.getColumnName())));
+            note.setDate(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(NoteColumns.DATE.getColumnName()))));
+            note.setTitle(cursor.getString(cursor.getColumnIndexOrThrow(NoteColumns.TITLE.getColumnName())));
+            note.setContent(cursor.getString(cursor.getColumnIndexOrThrow(NoteColumns.CONTENT.getColumnName())));
+            result.add(note);
+        }
+        return result;
+    }
+
+    @NonNull
+    private ContentValues getValues(@NonNull Note note) {
+        ContentValues values = new ContentValues();
+        values.put(NoteColumns.TITLE.getColumnName(), note.getTitle());
+        values.put(NoteColumns.CONTENT.getColumnName(), note.getContent());
+        values.put(NoteColumns.DATE.getColumnName(), note.getDate().getTime());
+        return values;
+    }
+
+    private int update(@NonNull Note note) {
+        return mDatabase.update(NoteColumns.TABLE_NAME, getValues(note), NoteColumns.ID.getColumnName() + " = ?",
+                new String[]{note.getId().toString()});
+    }
+
+    private long insert(@NonNull Note note) {
+        return mDatabase.insert(NoteColumns.TABLE_NAME, null, getValues(note));
+    }
+
+    @NonNull
+    private List<Note> executeQuery(@Nullable String where, @Nullable String[] whereParams, @Nullable String orderBy) {
+        try (Cursor cursor = mDatabase.query(
+                NoteColumns.TABLE_NAME,
+                ListUtils.map(NoteColumns.values(), String.class, new Function<NoteColumns, String>() {
+                    @Override
+                    public String apply(NoteColumns noteColumn) {
+                        return noteColumn.getColumnName();
+                    }
+                }),
+                where,
+                whereParams,
+                null,
+                null,
+                orderBy)) {
+            return readFromCursor(cursor);
+        }
     }
 }
