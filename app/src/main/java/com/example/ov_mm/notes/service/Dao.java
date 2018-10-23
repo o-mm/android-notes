@@ -22,8 +22,9 @@ public class Dao {
     @NonNull private final List<NoteColumns> mSearchColumns = Arrays.asList(NoteColumns.TITLE, NoteColumns.CONTENT);
 
     public Dao(@NonNull SQLiteDatabase db) {
-        if (db.isReadOnly())
+        if (db.isReadOnly()) {
             throw new IllegalStateException("Database must be writable");
+        }
         mDatabase = db;
     }
 

@@ -21,14 +21,15 @@ public class NotesRepository {
         this.mDao = dao;
     }
 
-    public void loadNotes(@NonNull Consumer<List<NoteWrapper>> resultConsumer, @Nullable String query, @Nullable SortProperty sortBy, boolean desc) {
-        new DataSelectionTask(mDao, resultConsumer, query, sortBy, desc).execute();
+    public AsyncTask loadNotes(@NonNull Consumer<List<NoteWrapper>> resultConsumer, @Nullable String query, @Nullable SortProperty sortBy, boolean desc) {
+        return new DataSelectionTask(mDao, resultConsumer, query, sortBy, desc).execute();
     }
 
     public void saveNote(@NonNull NoteWrapper note) {
         if (note.isChanged()) {
             note.getNote().setDate(new Date());
             mDao.saveNote(note.getNote());
+            note.setChanged(false);
         }
     }
 
@@ -54,7 +55,7 @@ public class NotesRepository {
     public static class DataSelectionTask extends AsyncTask<Object, Void, List<NoteWrapper>> {
 
         @NonNull private final Dao mDao;
-        @NonNull private final Consumer<List<NoteWrapper>> mResultConsumer;
+        @Nullable private Consumer<List<NoteWrapper>> mResultConsumer;
         @Nullable private final String mQuery;
         @Nullable private final SortProperty mSortBy;
         private final boolean mDesc;
@@ -81,7 +82,14 @@ public class NotesRepository {
         @Override
         protected void onPostExecute(List<NoteWrapper> noteWrappers) {
             super.onPostExecute(noteWrappers);
-            mResultConsumer.accept(noteWrappers);
+            if (mResultConsumer != null) {
+                mResultConsumer.accept(noteWrappers);
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            mResultConsumer = null;
         }
     }
 }

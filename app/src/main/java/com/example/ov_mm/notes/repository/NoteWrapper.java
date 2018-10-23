@@ -42,10 +42,6 @@ public class NoteWrapper {
         }
     }
 
-    boolean isChanged() {
-        return mChanged;
-    }
-
     @Nullable
     public Date getDate() {
         return mNote.getDate();
@@ -60,4 +56,13 @@ public class NoteWrapper {
     public Long getId() {
         return mNote.getId();
     }
+
+    boolean isChanged() {
+        return mChanged;
+    }
+
+    void setChanged(boolean changed) {
+        mChanged = changed;
+    }
+
 }

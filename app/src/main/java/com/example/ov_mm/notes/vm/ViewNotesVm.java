@@ -3,6 +3,7 @@ package com.example.ov_mm.notes.vm;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Consumer;
@@ -24,6 +25,7 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     @NonNull private final MutableLiveData<List<NoteWrapper>> mNotes = new MutableLiveData<>();
     @Nullable private String mTerm;
     @Nullable private SortProperty mSortProperty;
+    @Nullable private AsyncTask mLoadTask;
     private boolean mDesc;
 
     @NonNull private final Comparator defaultComparator = new Comparator<Comparable>() {
@@ -89,10 +91,14 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     }
 
     private void loadNotes() {
-        mRepository.loadNotes(new Consumer<List<NoteWrapper>>() {
+        if (mLoadTask != null) {
+            mLoadTask.cancel(true);
+        }
+        mLoadTask = mRepository.loadNotes(new Consumer<List<NoteWrapper>>() {
             @Override
             public void accept(List<NoteWrapper> notes) {
                 mNotes.setValue(reorderNotes(notes));
+                mLoadTask = null;
             }
         }, mTerm, mSortProperty, mDesc);
     }
@@ -122,5 +128,14 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
             }
         });
         return notes;
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (mLoadTask != null) {
+            mLoadTask.cancel(true);
+        }
+        mLoadTask = null;
     }
 }
