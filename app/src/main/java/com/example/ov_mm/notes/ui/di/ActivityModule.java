@@ -1,8 +1,8 @@
 package com.example.ov_mm.notes.ui.di;
 
+import android.arch.lifecycle.ViewModelProvider;
 import android.arch.lifecycle.ViewModelProviders;
 
-import com.example.ov_mm.notes.vm.EditNoteVm;
 import com.example.ov_mm.notes.vm.ViewNotesVm;
 
 import dagger.Module;
@@ -19,13 +19,13 @@ public class ActivityModule {
 
     @ActivityScope
     @Provides
-    EditNoteVm provideEditNote() {
-        return ViewModelProviders.of(mActivity).get(EditNoteVm.class);
+    ViewNotesVm provideViewNotesVm(ViewModelProvider.Factory factory) {
+        return ViewModelProviders.of(mActivity, factory).get(ViewNotesVm.class);
     }
 
     @ActivityScope
     @Provides
-    ViewNotesVm provideViewNotesVm() {
-        return ViewModelProviders.of(mActivity).get(ViewNotesVm.class);
+    ViewModelProvider.Factory provideFactory(RepoVmFactory factory) {
+        return factory;
     }
 }

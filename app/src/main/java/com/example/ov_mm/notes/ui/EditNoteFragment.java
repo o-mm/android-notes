@@ -12,8 +12,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
+import com.example.ov_mm.notes.NotesApp;
 import com.example.ov_mm.notes.R;
+import com.example.ov_mm.notes.di.NotesAppComponent;
 import com.example.ov_mm.notes.repository.NoteWrapper;
+import com.example.ov_mm.notes.ui.di.RepoVmFactory;
 import com.example.ov_mm.notes.vm.EditNoteVm;
 
 public class EditNoteFragment extends Fragment {
@@ -38,7 +41,8 @@ public class EditNoteFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mEditNoteVm = ViewModelProviders.of(this).get(EditNoteVm.class);
+        NotesAppComponent appComponent = ((NotesApp) requireContext().getApplicationContext()).getNotesAppComponent();
+        mEditNoteVm = ViewModelProviders.of(this, new RepoVmFactory(appComponent.repository())).get(EditNoteVm.class);
         if (savedInstanceState != null) {
             mNoteId = savedInstanceState.getLong(EXTRA_ITEM_ID_FOR_EDIT);
         } else if (getArguments() != null) {

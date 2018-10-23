@@ -1,14 +1,14 @@
 package com.example.ov_mm.notes.vm;
 
-import android.app.Application;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.ViewModel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Consumer;
 
-import com.example.ov_mm.notes.di.BaseViewModel;
 import com.example.ov_mm.notes.repository.NoteWrapper;
+import com.example.ov_mm.notes.repository.NotesRepository;
 import com.example.ov_mm.notes.repository.SortProperty;
 import com.example.ov_mm.notes.ui.SearchSortFragment;
 
@@ -17,8 +17,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
-public class ViewNotesVm extends BaseViewModel implements SearchSortFragment.OnSearchSortListener {
+public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearchSortListener {
 
+    @NonNull private final NotesRepository mRepository;
     private boolean initialized;
     @NonNull private final MutableLiveData<List<NoteWrapper>> mNotes = new MutableLiveData<>();
     @Nullable private String mTerm;
@@ -38,8 +39,8 @@ public class ViewNotesVm extends BaseViewModel implements SearchSortFragment.OnS
         }
     };
 
-    public ViewNotesVm(@NonNull Application application) {
-        super(application);
+    public ViewNotesVm(@NonNull NotesRepository repository) {
+        mRepository = repository;
     }
 
     public void init(@Nullable String term, @Nullable SortProperty sortProperty, boolean desc) {

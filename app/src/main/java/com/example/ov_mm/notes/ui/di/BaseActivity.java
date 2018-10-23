@@ -4,17 +4,19 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
+import com.example.ov_mm.notes.NotesApp;
+
 public abstract class BaseActivity extends AppCompatActivity {
 
-    private ActivityComponent mActivityComponent;
+    private ActivitySubComponent mActivitySubComponent;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mActivityComponent = DaggerActivityComponent.builder().activityModule(new ActivityModule(this)).build();
+        mActivitySubComponent = ((NotesApp) getApplication()).getNotesAppComponent().activityComponent(new ActivityModule(this));
     }
 
-    protected ActivityComponent getActivityComponent() {
-        return mActivityComponent;
+    protected ActivitySubComponent getActivitySubComponent() {
+        return mActivitySubComponent;
     }
 }

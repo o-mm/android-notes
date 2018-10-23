@@ -11,7 +11,6 @@ import android.support.v7.widget.Toolbar;
 import com.example.ov_mm.notes.R;
 import com.example.ov_mm.notes.repository.NoteWrapper;
 import com.example.ov_mm.notes.ui.di.BaseActivity;
-import com.example.ov_mm.notes.vm.EditNoteVm;
 import com.example.ov_mm.notes.vm.ViewNotesVm;
 
 import java.util.Objects;
@@ -26,7 +25,7 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getActivityComponent().inject(this);
+        getActivitySubComponent().inject(this);
         setContentView(R.layout.activity_view_notes);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {

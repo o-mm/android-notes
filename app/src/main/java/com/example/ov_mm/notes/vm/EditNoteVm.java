@@ -1,20 +1,21 @@
 package com.example.ov_mm.notes.vm;
 
-import android.app.Application;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.ViewModel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.example.ov_mm.notes.di.BaseViewModel;
 import com.example.ov_mm.notes.repository.NoteWrapper;
+import com.example.ov_mm.notes.repository.NotesRepository;
 
-public class EditNoteVm extends BaseViewModel {
+public class EditNoteVm extends ViewModel {
 
     @NonNull private final MutableLiveData<NoteWrapper> mNote = new MutableLiveData<>();
+    @NonNull private final NotesRepository mRepository;
 
-    public EditNoteVm(@NonNull Application application) {
-        super(application);
+    public EditNoteVm(@NonNull NotesRepository repository) {
+        mRepository = repository;
     }
 
     public void init(@Nullable Long id) {

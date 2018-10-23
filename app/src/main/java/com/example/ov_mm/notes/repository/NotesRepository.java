@@ -12,14 +12,11 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import javax.inject.Inject;
-
 public class NotesRepository {
 
     @NonNull
     private final Dao mDao;
 
-    @Inject
     public NotesRepository(@NonNull Dao dao) {
         this.mDao = dao;
     }
