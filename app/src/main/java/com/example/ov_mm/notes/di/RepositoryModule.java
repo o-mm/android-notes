@@ -1,5 +1,7 @@
 package com.example.ov_mm.notes.di;
 
+import android.support.annotation.NonNull;
+
 import com.example.ov_mm.notes.repository.NotesRepository;
 import com.example.ov_mm.notes.service.Dao;
 
@@ -13,7 +15,8 @@ class RepositoryModule {
 
     @Provides
     @Singleton
-    NotesRepository provideNotesRepository(Dao dao) {
+    @NonNull
+    NotesRepository provideNotesRepository(@NonNull Dao dao) {
         return new NotesRepository(dao);
     }
 }

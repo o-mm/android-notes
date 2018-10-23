@@ -5,30 +5,31 @@ import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProvider;
 import android.arch.lifecycle.ViewModelProviders;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 
 import com.example.ov_mm.notes.repository.NotesRepository;
-import com.example.ov_mm.notes.vm.ViewNotesVm;
+import com.example.ov_mm.notes.vm.EditNoteVm;
 
 import dagger.Module;
 import dagger.Provides;
 
-@Module
-public class ActivityModule {
+@Module()
+public class FragmentModule {
 
-    @NonNull private BaseActivity mActivity;
+    @NonNull private final Fragment mFragment;
 
-    public ActivityModule(@NonNull BaseActivity activity) {
-        mActivity = activity;
+    public FragmentModule(@NonNull Fragment fragment) {
+        mFragment = fragment;
     }
 
-    @ActivityScope
+    @FragmentScope
     @Provides
     @NonNull
-    ViewNotesVm provideViewNotesVm(@NonNull ViewModelProvider.Factory factory) {
-        return ViewModelProviders.of(mActivity, factory).get(ViewNotesVm.class);
+    EditNoteVm provideEditNoteVm(@NonNull ViewModelProvider.Factory factory) {
+        return ViewModelProviders.of(mFragment, factory).get(EditNoteVm.class);
     }
 
-    @ActivityScope
+    @FragmentScope
     @Provides
     @NonNull
     ViewModelProvider.Factory provideFactory(final NotesRepository repository) {
@@ -36,10 +37,10 @@ public class ActivityModule {
             @NonNull
             @Override
             public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-                if (ViewNotesVm.class.equals(modelClass)) {
-                    return (T) new ViewNotesVm(repository);
+                if (EditNoteVm.class.equals(modelClass)) {
+                    return (T) new EditNoteVm(repository);
                 } else if (AndroidViewModel.class.isAssignableFrom(modelClass)) {
-                    return ViewModelProvider.AndroidViewModelFactory.getInstance(mActivity.getApplication()).create(modelClass);
+                    return ViewModelProvider.AndroidViewModelFactory.getInstance(mFragment.requireActivity().getApplication()).create(modelClass);
                 } else {
                     return new ViewModelProvider.NewInstanceFactory().create(modelClass);
                 }
