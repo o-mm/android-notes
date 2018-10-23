@@ -12,7 +12,11 @@ import com.example.ov_mm.notes.repository.NotesRepository;
 public class EditNoteVm extends ViewModel {
 
     @NonNull private final MutableLiveData<NoteWrapper> mNote = new MutableLiveData<>();
-    @NonNull private final NotesRepository mRepository = new NotesRepository();
+    @NonNull private final NotesRepository mRepository;
+
+    public EditNoteVm(@NonNull NotesRepository repository) {
+        mRepository = repository;
+    }
 
     public void init(@Nullable Long id) {
         if (mNote.getValue() == null) {

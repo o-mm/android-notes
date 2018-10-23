@@ -15,11 +15,15 @@ import java.util.List;
 public class NotesRepository {
 
     @NonNull
-    private final Dao dao = new Dao();
+    private final Dao mDao;
+
+    public NotesRepository(@NonNull Dao dao) {
+        this.mDao = dao;
+    }
 
     public void loadNotes(@NonNull Consumer<List<NoteWrapper>> resultConsumer,  @Nullable String query) {
         List<NoteWrapper> result = new ArrayList<>();
-        Collection<Note> notes = query == null ? dao.getAllNotes() : dao.getNotes(query);
+        Collection<Note> notes = query == null ? mDao.getAllNotes() : mDao.getNotes(query);
         for (Note note : notes) {
             result.add(new NoteWrapper(note));
         }
@@ -29,12 +33,12 @@ public class NotesRepository {
     public void saveNote(@NonNull NoteWrapper note) {
         if (note.isChanged()) {
             note.getNote().setDate(new Date());
-            dao.saveNote(note.getNote());
+            mDao.saveNote(note.getNote());
         }
     }
 
     public void deleteNote(@NonNull NoteWrapper note) {
-        dao.removeNote(note.getNote());
+        mDao.removeNote(note.getNote());
     }
 
     @NonNull
@@ -44,7 +48,7 @@ public class NotesRepository {
 
     @Nullable
     public NoteWrapper getNote(@NonNull Long id) {
-        Note note = dao.getNote(id);
+        Note note = mDao.getNote(id);
         if (note != null)
             return new NoteWrapper(note);
         else {

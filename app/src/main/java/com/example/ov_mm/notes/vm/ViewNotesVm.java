@@ -19,12 +19,13 @@ import java.util.Objects;
 
 public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearchSortListener {
 
+    @NonNull private final NotesRepository mRepository;
     private boolean initialized;
     @NonNull private final MutableLiveData<List<NoteWrapper>> mNotes = new MutableLiveData<>();
     @Nullable private String mTerm;
     @Nullable private SortProperty mSortProperty;
     private boolean mDesc;
-    @NonNull private final NotesRepository mNotesRepository = new NotesRepository();
+
     @NonNull private final Comparator defaultComparator = new Comparator<Comparable>() {
         @Override
         public int compare(Comparable o1, Comparable o2) {
@@ -37,6 +38,10 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
             }
         }
     };
+
+    public ViewNotesVm(@NonNull NotesRepository repository) {
+        mRepository = repository;
+    }
 
     public void init(@Nullable String term, @Nullable SortProperty sortProperty, boolean desc) {
         if (!initialized) {
@@ -71,7 +76,7 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     public void onSortPropertyChanged(@Nullable SortProperty sortProperty) {
         if (initialized) {
             mSortProperty = sortProperty;
-            reorderNotes(mNotes.getValue());
+            mNotes.setValue(reorderNotes(mNotes.getValue()));
         }
     }
 
@@ -84,7 +89,7 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     }
 
     private void loadNotes() {
-        mNotesRepository.loadNotes(new Consumer<List<NoteWrapper>>() {
+        mRepository.loadNotes(new Consumer<List<NoteWrapper>>() {
             @Override
             public void accept(List<NoteWrapper> notes) {
                 mNotes.setValue(reorderNotes(notes));
@@ -94,7 +99,7 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
 
     @NonNull
     public NoteWrapper createNote() {
-        return mNotesRepository.createNote();
+        return mRepository.createNote();
     }
 
     @NonNull
