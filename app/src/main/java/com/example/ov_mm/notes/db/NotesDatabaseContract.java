@@ -1,5 +1,7 @@
 package com.example.ov_mm.notes.db;
 
+import android.support.annotation.NonNull;
+
 import com.example.ov_mm.notes.db.migration.CommonDataAdded;
 import com.example.ov_mm.notes.db.migration.Migration;
 import com.example.ov_mm.notes.db.tables.CommonData;
@@ -11,12 +13,12 @@ import java.util.List;
 
 public final class NotesDatabaseContract {
 
-    static final List<Class<? extends TableDefinition>> TABLES = Collections.unmodifiableList(Arrays.<Class<? extends TableDefinition>>asList(
+    @NonNull static final List<Class<? extends TableDefinition>> TABLES = Collections.unmodifiableList(Arrays.<Class<? extends TableDefinition>>asList(
             NoteColumns.class,
             CommonData.class
     ));
 
-    static final List<Class<? extends Migration>> MIGRATIONS = Collections.unmodifiableList(Arrays.<Class<? extends Migration>>asList(
+    @NonNull static final List<Class<? extends Migration>> MIGRATIONS = Collections.unmodifiableList(Arrays.<Class<? extends Migration>>asList(
             CommonDataAdded.class
     ));
 
@@ -26,8 +28,11 @@ public final class NotesDatabaseContract {
 
     public interface TableDefinition {
 
+        @NonNull
         String getTableName();
+        @NonNull
         String getColumnName();
+        @NonNull
         String getDefinition();
     }
 

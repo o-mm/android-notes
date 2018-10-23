@@ -25,13 +25,14 @@ public class NotesDao {
     @NonNull private final SQLiteDatabase mDatabase;
     @NonNull private final List<NoteColumns> mSearchColumns = Arrays.asList(NoteColumns.TITLE, NoteColumns.CONTENT);
 
-    @Inject
     public NotesDao(@NonNull SQLiteDatabase db) {
-        if (db.isReadOnly())
+        if (db.isReadOnly()) {
             throw new IllegalStateException("Database must be writable");
+        }
         mDatabase = db;
     }
 
+    @NonNull
     public Note saveNote(@NonNull Note note) {
         if (note.getId() == null || update(note) == 0) {
             note.setGuid(UUID.randomUUID().toString());
@@ -76,6 +77,7 @@ public class NotesDao {
         return notes.get(0);
     }
 
+    @NonNull
     private List<Note> readFromCursor(Cursor cursor) {
         List<Note> result = new ArrayList<>();
         while (cursor.moveToNext()) {

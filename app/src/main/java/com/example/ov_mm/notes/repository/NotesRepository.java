@@ -1,39 +1,35 @@
 package com.example.ov_mm.notes.repository;
 
-import android.arch.lifecycle.MutableLiveData;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.util.Consumer;
 
 import com.example.ov_mm.notes.model.Note;
 import com.example.ov_mm.notes.service.dao.NotesDao;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-
-import javax.inject.Inject;
 
 public class NotesRepository {
 
     @NonNull
     private final NotesDao mNotesDao;
 
-    @Inject
     public NotesRepository(@NonNull NotesDao notesDao) {
         this.mNotesDao = notesDao;
     }
 
-    public void load(@NonNull MutableLiveData<List<NoteWrapper>> notes, @Nullable String query, @Nullable SortProperty sortBy, boolean desc) {
-        new DataSelectionTask(mNotesDao, notes, query, sortBy, desc).execute();
+    public AsyncTask loadNotes(@NonNull Consumer<List<NoteWrapper>> resultConsumer, @Nullable String query, @Nullable SortProperty sortBy, boolean desc) {
+        return new DataSelectionTask(mNotesDao, resultConsumer, query, sortBy, desc).execute();
     }
 
     public void saveNote(@NonNull NoteWrapper note) {
         if (note.isChanged()) {
             note.getNote().setDate(new Date());
             mNotesDao.saveNote(note.getNote());
+            note.setChanged(false);
         }
     }
 
@@ -44,27 +40,6 @@ public class NotesRepository {
     @NonNull
     public NoteWrapper createNote() {
         return new NoteWrapper(new Note());
-    }
-
-    public void reorderNotes(MutableLiveData<List<NoteWrapper>> notes, String term, SortProperty sortProperty, boolean desc) {
-        notes.setValue(reorderNotes(notes.getValue() == null ? Collections.<NoteWrapper>emptyList() : notes.getValue(), sortProperty, desc));
-    }
-
-    @NonNull
-    private List<NoteWrapper> reorderNotes(@NonNull List<NoteWrapper> notes, @Nullable final SortProperty sortBy, final boolean desc) {
-        Collections.sort(notes, new Comparator<NoteWrapper>() {
-            @Override
-            public int compare(NoteWrapper o1, NoteWrapper o2) {
-                if (SortProperty.DATE.equals(sortBy)) {
-                    return o1.getDate().compareTo(o2.getDate()) * (desc ? -1 : 1);
-                } else if (SortProperty.TITLE.equals(sortBy)) {
-                    return o1.getTitle().compareTo(o2.getTitle()) * (desc ? -1 : 1);
-                } else {
-                    return 0;
-                }
-            }
-        });
-        return notes;
     }
 
     @Nullable
@@ -80,15 +55,15 @@ public class NotesRepository {
     public static class DataSelectionTask extends AsyncTask<Object, Void, List<NoteWrapper>> {
 
         @NonNull private final NotesDao mNotesDao;
-        @NonNull private final MutableLiveData<List<NoteWrapper>> mNotes;
+        @Nullable private Consumer<List<NoteWrapper>> mResultConsumer;
         @Nullable private final String mQuery;
         @Nullable private final SortProperty mSortBy;
         private final boolean mDesc;
 
-        public DataSelectionTask(@NonNull NotesDao notesDao, @NonNull MutableLiveData<List<NoteWrapper>> notes, @Nullable String query, @Nullable SortProperty sortBy,
+        public DataSelectionTask(@NonNull NotesDao dao, @NonNull Consumer<List<NoteWrapper>> resultConsumer,  @Nullable String query, @Nullable SortProperty sortBy,
                                  boolean desc) {
-            mNotesDao = notesDao;
-            mNotes = notes;
+            mNotesDao = dao;
+            mResultConsumer = resultConsumer;
             mQuery = query;
             mSortBy = sortBy;
             mDesc = desc;
@@ -107,7 +82,14 @@ public class NotesRepository {
         @Override
         protected void onPostExecute(List<NoteWrapper> noteWrappers) {
             super.onPostExecute(noteWrappers);
-            mNotes.setValue(noteWrappers);
+            if (mResultConsumer != null) {
+                mResultConsumer.accept(noteWrappers);
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            mResultConsumer = null;
         }
     }
 }

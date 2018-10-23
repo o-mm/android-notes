@@ -1,6 +1,7 @@
 package com.example.ov_mm.notes.repository;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.example.ov_mm.notes.model.Note;
 
@@ -17,32 +18,31 @@ public class NoteWrapper {
         this.mNote = note;
     }
 
+    @Nullable
     public String getTitle() {
         return mNote.getTitle();
     }
 
-    public void setTitle(String title) {
+    public void setTitle(@Nullable String title) {
         if (!Objects.equals(mNote.getTitle(), title)) {
             mNote.setTitle(title);
             mChanged = true;
         }
     }
 
+    @Nullable
     public String getContent() {
         return mNote.getContent();
     }
 
-    public void setContent(String content) {
+    public void setContent(@Nullable String content) {
         if (!Objects.equals(mNote.getContent(), content)) {
             mNote.setContent(content);
             mChanged = true;
         }
     }
 
-    public boolean isChanged() {
-        return mChanged;
-    }
-
+    @Nullable
     public Date getDate() {
         return mNote.getDate();
     }
@@ -52,7 +52,17 @@ public class NoteWrapper {
         return mNote;
     }
 
+    @Nullable
     public Long getId() {
         return mNote.getId();
     }
+
+    boolean isChanged() {
+        return mChanged;
+    }
+
+    void setChanged(boolean changed) {
+        mChanged = changed;
+    }
+
 }
