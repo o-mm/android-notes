@@ -39,9 +39,10 @@ public class RemoteNotesService {
         mNotesDao = notesDao;
     }
 
-    public void synchronize() throws IOException {
+    public void synchronize(Date startDate) throws IOException {
+        mCommonDao.get
         mNotesDao.getNotes()
-        RequestBody requestBody = RequestBody.create(JSON_MEDIA_TYPE, toJson(createSyncObject(startDate)));
+        RequestBody requestBody = RequestBody.create(JSON_MEDIA_TYPE, toJson(createSyncObject()));
         Request request = new Request.Builder()
                 .url(NOTES_SERVER_URL + "/" + mCommonDao.getUser())
                 .post(requestBody)
