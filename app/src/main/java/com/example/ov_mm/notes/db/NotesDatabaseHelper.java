@@ -18,7 +18,8 @@ public class NotesDatabaseHelper extends SQLiteOpenHelper {
         super(context, DATABASE_NAME, null, NotesDatabaseContract.MIGRATIONS.size() + 1);
     }
 
-    public static void buildCreateTableQuery(Class<? extends NotesDatabaseContract.TableDefinition> cls, StringBuilder builder) {
+    public static String buildCreateTableQuery(Class<? extends NotesDatabaseContract.TableDefinition> cls) {
+        StringBuilder builder = new StringBuilder();
         if (!cls.isEnum())
             throw new UnsupportedOperationException("All classes describing tables must be enums");
         NotesDatabaseContract.TableDefinition[] columns = cls.getEnumConstants();
@@ -36,27 +37,24 @@ public class NotesDatabaseHelper extends SQLiteOpenHelper {
                     .append(" ")
                     .append(columns[i].getDefinition());
         }
-        builder.append(");\n");
+        builder.append(")");
+        return builder.toString();
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        StringBuilder createQuery = new StringBuilder();
         for (Class<? extends NotesDatabaseContract.TableDefinition> cls : NotesDatabaseContract.TABLES) {
-            buildCreateTableQuery(cls, createQuery);
+            db.execSQL(buildCreateTableQuery(cls));
         }
-        db.execSQL(createQuery.toString());
-        db.execSQL(new InitialMigration().getMigration());
+        new InitialMigration().executeMigration(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         try {
-            StringBuilder fullMigration = new StringBuilder();
             for (Class<? extends Migration> migration : NotesDatabaseContract.MIGRATIONS.subList(oldVersion - 1, newVersion - 1)) {
-                fullMigration.append(migration.newInstance().getMigration()).append("\n");
+                migration.newInstance().executeMigration(db);
             }
-            db.execSQL(fullMigration.toString());
         } catch (IllegalAccessException | InstantiationException | SQLException e) {
             Log.e(TAG, "Unable to apply migrations from %d version to %d version", e);
         }

@@ -5,7 +5,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 
 import com.example.ov_mm.notes.db.NotesDatabaseHelper;
+import com.example.ov_mm.notes.service.dao.CommonDataDao;
 import com.example.ov_mm.notes.service.dao.NotesDao;
+import com.example.ov_mm.notes.service.dao.NotesUpdateDao;
 
 import javax.inject.Singleton;
 
@@ -24,8 +26,22 @@ public class DaoModule {
     @Singleton
     @Provides
     @NonNull
-    NotesDao provideDao(@NonNull SQLiteDatabase db) {
+    NotesDao provideNotesDao(@NonNull SQLiteDatabase db) {
         return new NotesDao(db);
+    }
+
+    @Singleton
+    @Provides
+    @NonNull
+    CommonDataDao provideCommonDataDao(@NonNull SQLiteDatabase db) {
+        return new CommonDataDao(db);
+    }
+
+    @Singleton
+    @Provides
+    @NonNull
+    NotesUpdateDao provideNotesUpdateDao(@NonNull SQLiteDatabase db) {
+        return new NotesUpdateDao(db);
     }
 
     @Singleton

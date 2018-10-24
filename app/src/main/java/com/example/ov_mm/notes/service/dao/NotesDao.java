@@ -18,8 +18,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import javax.inject.Inject;
-
 public class NotesDao {
 
     @NonNull private final SQLiteDatabase mDatabase;
@@ -34,8 +32,10 @@ public class NotesDao {
 
     @NonNull
     public Note saveNote(@NonNull Note note) {
-        if (note.getId() == null || update(note) == 0) {
+        if (note.getGuid() == null) {
             note.setGuid(UUID.randomUUID().toString());
+        }
+        if (note.getId() == null || update(note) == 0) {
             note.setId(insert(note));
         }
         return note;
@@ -52,29 +52,59 @@ public class NotesDao {
     public List<Note> getNotes(@Nullable String term, @Nullable NoteColumns column, boolean desc) {
         String orderBy = column == null ? null : column.getColumnName() + (desc ? " DESC" : " ASC");
         if (term == null) {
-            return executeQuery(null, null, orderBy);
+            return executeQuery(NoteColumns.DELETED.getColumnName() + " = ?", new String[]{String.valueOf(0)}, orderBy);
         }
         StringBuilder where = new StringBuilder();
+        where.append(NoteColumns.DELETED.getColumnName()).append(" = ? AND (");
         for (NoteColumns col : mSearchColumns) {
             if (where.length() != 0) {
                 where.append(" OR ");
             }
             where.append("lower(").append(col.getColumnName()).append(") LIKE ?");
         }
-        String[] params = new String[mSearchColumns.size()];
-        Arrays.fill(params, "%" + term.toLowerCase() + "%");
+        where.append(")");
+        String[] params = new String[mSearchColumns.size() + 1];
+        params[0] = String.valueOf(0);
+        Arrays.fill(params, 1, params.length, "%" + term.toLowerCase() + "%");
         return executeQuery(where.toString(), params, orderBy);
     }
 
     @Nullable
     public Note getNote(@NonNull Long id) {
-        List<Note> notes = executeQuery(NoteColumns.ID + " = ?", new String[]{id.toString()}, null);
+        List<Note> notes = executeQuery(NoteColumns.ID.getColumnName() + " = ? AND " + NoteColumns.DELETED.getColumnName() + " = ?",
+                new String[]{id.toString(), String.valueOf(0)}, null);
         if (notes.isEmpty()) {
             return null;
         } else if (notes.size() > 1) {
             throw new IllegalStateException("There are more than one note with the same ID in DB");
         }
         return notes.get(0);
+    }
+
+    private boolean exists(@NonNull String guid) {
+        try (Cursor cursor = mDatabase.query(NoteColumns.TABLE_NAME,
+                new String[]{NoteColumns.ID.getColumnName()}, NoteColumns.GUID.getColumnName() + " = ?", new String[]{guid}, null, null, null)) {
+
+            if (cursor.getCount() > 1) {
+                throw new IllegalStateException("There are more than one note with the same ID in DB");
+            }
+            return cursor.getCount() == 1;
+        }
+    }
+
+    @NonNull
+    public List<Note> getUnsyncedNotes() {
+        return executeQuery(NoteColumns.SYNCED.getColumnName() + " = ?", new String[]{String.valueOf(0)}, null);
+    }
+
+    public void saveNotes(Collection<Note> notes) {
+        for (Note note : notes) {
+            if (!exists(note.getGuid())) {
+                saveNote(note);
+            } else {
+                updateFromRemote(note);
+            }
+        }
     }
 
     @NonNull
@@ -87,6 +117,8 @@ public class NotesDao {
             note.setDate(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(NoteColumns.DATE.getColumnName()))));
             note.setTitle(cursor.getString(cursor.getColumnIndexOrThrow(NoteColumns.TITLE.getColumnName())));
             note.setContent(cursor.getString(cursor.getColumnIndexOrThrow(NoteColumns.CONTENT.getColumnName())));
+            note.setSynced(cursor.getInt(cursor.getColumnIndexOrThrow(NoteColumns.SYNCED.getColumnName())) == 1);
+            note.setSynced(cursor.getInt(cursor.getColumnIndexOrThrow(NoteColumns.DELETED.getColumnName())) == 1);
             result.add(note);
         }
         return result;
@@ -99,12 +131,20 @@ public class NotesDao {
         values.put(NoteColumns.GUID.getColumnName(), note.getGuid());
         values.put(NoteColumns.CONTENT.getColumnName(), note.getContent());
         values.put(NoteColumns.DATE.getColumnName(), note.getDate().getTime());
+        values.put(NoteColumns.SYNCED.getColumnName(), note.isSynced() ? 1 : 0);
+        values.put(NoteColumns.DELETED.getColumnName(), note.isDeleted() ? 1 : 0);
         return values;
     }
 
     private int update(@NonNull Note note) {
         return mDatabase.update(NoteColumns.TABLE_NAME, getValues(note), NoteColumns.ID.getColumnName() + " = ?",
                 new String[]{note.getId().toString()});
+    }
+
+    private void updateFromRemote(@NonNull Note note) {
+        mDatabase.update(NoteColumns.TABLE_NAME, getValues(note),
+                NoteColumns.GUID.getColumnName() + " = ?",
+                new String[]{note.getGuid()});
     }
 
     private long insert(@NonNull Note note) {
@@ -128,9 +168,5 @@ public class NotesDao {
                 orderBy)) {
             return readFromCursor(cursor);
         }
-    }
-
-    public void saveNotes(Collection<Note> notes) {
-
     }
 }

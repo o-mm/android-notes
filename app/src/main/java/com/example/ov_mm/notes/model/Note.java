@@ -6,13 +6,17 @@ public class Note {
 
     private Long mId;
 
-    private String guid;
+    private String mGuid;
 
     private Date mDate;
 
     private String mTitle;
 
     private String mContent;
+
+    private boolean deleted;
+
+    private boolean mSynced;
 
     public Long getId() {
         return mId;
@@ -23,11 +27,11 @@ public class Note {
     }
 
     public String getGuid() {
-        return guid;
+        return mGuid;
     }
 
     public void setGuid(String guid) {
-        this.guid = guid;
+        this.mGuid = guid;
     }
 
     public Date getDate() {
@@ -52,5 +56,21 @@ public class Note {
 
     public void setContent(String content) {
         this.mContent = content;
+    }
+
+    public boolean isSynced() {
+        return mSynced;
+    }
+
+    public void setSynced(boolean synced) {
+        this.mSynced = synced;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }

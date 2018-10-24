@@ -1,9 +1,9 @@
 package com.example.ov_mm.notes.db.migration;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 
 public interface Migration {
 
-    @NonNull
-    String getMigration();
+    void executeMigration(@NonNull SQLiteDatabase db);
 }

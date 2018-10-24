@@ -12,8 +12,8 @@ public class NotesApp extends Application {
 
     @Override
     public void onCreate() {
-        super.onCreate();
         mNotesAppComponent = DaggerNotesAppComponent.builder().daoModule(new DaoModule(this)).build();
+        super.onCreate();
     }
 
     public NotesAppComponent getNotesAppComponent() {

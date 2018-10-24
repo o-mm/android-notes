@@ -1,23 +1,34 @@
 package com.example.ov_mm.notes.db.migration;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 
+import com.example.ov_mm.notes.db.tables.CommonDataColumns;
 import com.example.ov_mm.notes.db.tables.NoteColumns;
+import com.example.ov_mm.notes.model.CommonData;
 
 import java.util.Calendar;
 import java.util.UUID;
 
 public class InitialMigration implements Migration {
 
-    @NonNull
     @Override
-    public String getMigration() {
-        return String.format("INSERT INTO %s (%s, %s, %s, %s) VALUES " + generateValues() + ";",
+    public void executeMigration(@NonNull SQLiteDatabase db) {
+        db.execSQL(String.format(
+                "INSERT INTO %s (%s, %s, %s, %s, %s, %s) VALUES " + generateValues(),
                 NoteColumns.TABLE_NAME,
                 NoteColumns.GUID.getColumnName(),
                 NoteColumns.TITLE.getColumnName(),
                 NoteColumns.CONTENT.getColumnName(),
-                NoteColumns.DATE.getColumnName());
+                NoteColumns.DATE.getColumnName(),
+                NoteColumns.SYNCED.getColumnName(),
+                NoteColumns.DELETED.getColumnName()));
+        db.execSQL(String.format("INSERT INTO %s (%s, %s) VALUES ('%s', '%s')",
+                CommonDataColumns.TABLE_NAME,
+                CommonDataColumns.KEY.getColumnName(),
+                CommonDataColumns.VALUE.getColumnName(),
+                CommonData.USER_KEY,
+                CommonData.USER_ID));
     }
 
     @NonNull
@@ -32,7 +43,9 @@ public class InitialMigration implements Migration {
             values.append("('").append(UUID.randomUUID()).append("',");
             values.append("'Note number ").append(i + 1).append("', '");
             values.append(generateContent(i + 1)).append("', ");
-            values.append(calendar.getTimeInMillis()).append(")");
+            values.append(calendar.getTimeInMillis()).append(", ");
+            values.append("0").append(", ");
+            values.append("0").append(")");
         }
         return values.toString();
     }
