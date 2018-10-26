@@ -2,10 +2,8 @@ package com.example.ov_mm.notes.di;
 
 import android.support.annotation.NonNull;
 
-import com.example.ov_mm.notes.service.dao.CommonDataDao;
-import com.example.ov_mm.notes.service.dao.NotesDao;
-import com.example.ov_mm.notes.service.dao.NotesUpdateDao;
 import com.example.ov_mm.notes.service.network.RemoteNotesService;
+import com.google.gson.Gson;
 
 import javax.inject.Singleton;
 
@@ -14,21 +12,27 @@ import dagger.Module;
 import dagger.Provides;
 import okhttp3.OkHttpClient;
 
-@Module(includes = DaoModule.class)
+@Module
 public class RemoteServiceModule {
 
     @Provides
     @Singleton
-    RemoteNotesService provideRemoteNotesService(@NonNull Lazy<OkHttpClient> httpClient,
-                                                 @NonNull CommonDataDao commonDataDao,
-                                                 @NonNull NotesDao notesDao,
-                                                 @NonNull NotesUpdateDao notesUpdateDao) {
-        return new RemoteNotesService(httpClient, commonDataDao, notesDao, notesUpdateDao);
+    @NonNull
+    RemoteNotesService provideRemoteNotesService(@NonNull Lazy<OkHttpClient> httpClient, @NonNull Gson gson) {
+        return new RemoteNotesService(httpClient, gson);
     }
 
     @Provides
     @Singleton
+    @NonNull
     OkHttpClient provideHttpClient() {
         return new OkHttpClient();
+    }
+
+    @Provides
+    @Singleton
+    @NonNull
+    Gson provideGson() {
+        return new Gson();
     }
 }

@@ -3,21 +3,11 @@ package com.example.ov_mm.notes.service.network;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.example.ov_mm.notes.model.Note;
-import com.example.ov_mm.notes.model.NotesUpdate;
-import com.example.ov_mm.notes.service.dao.CommonDataDao;
-import com.example.ov_mm.notes.service.dao.NotesDao;
-import com.example.ov_mm.notes.service.dao.NotesUpdateDao;
-import com.example.ov_mm.notes.util.Function;
-import com.example.ov_mm.notes.util.ListUtils;
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.Objects;
 
 import dagger.Lazy;
 import okhttp3.MediaType;
@@ -31,84 +21,33 @@ public class RemoteNotesService {
 
     private static final String NOTES_SERVER_URL = "http://10.0.2.2:8080/notes/sync";
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
-    private final Lazy<OkHttpClient> mClient;
-    private final CommonDataDao mCommonDataDao;
-    private final NotesDao mNotesDao;
-    private final Lock syncLock = new ReentrantLock();
-    private final NotesUpdateDao mNotesUpdateDao;
+    @NonNull private final Lazy<OkHttpClient> mClient;
+    @NonNull private final Gson mGson;
 
-    public RemoteNotesService(@NonNull Lazy<OkHttpClient> httpClient,
-                              @NonNull CommonDataDao commonDataDao,
-                              @NonNull NotesDao notesDao,
-                              @NonNull NotesUpdateDao notesUpdateDao) {
+    public RemoteNotesService(@NonNull Lazy<OkHttpClient> httpClient, @NonNull Gson gson) {
         mClient = httpClient;
-        mCommonDataDao = commonDataDao;
-        mNotesDao = notesDao;
-        mNotesUpdateDao = notesUpdateDao;
+        mGson = gson;
     }
 
-    public void synchronize() throws IOException, SyncException {
-        syncLock.lock();
-        try {
-            RequestBody requestBody = RequestBody.create(JSON_MEDIA_TYPE, toJson(createSyncObject()));
-            Request request = new Request.Builder()
-                    .url(NOTES_SERVER_URL)
-                    .post(requestBody)
-                    .build();
-            try (Response response = mClient.get().newCall(request).execute()) {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        SyncObject syncObject = fromJson(response.body().string());
-                        if (syncObject != null && syncObject.getVersion() != null) {
-                            Long version = syncObject.getVersion();
-                            NotesUpdate notesUpdate = new NotesUpdate();
-                            notesUpdate.setVersion(version);
-                            notesUpdate.setDate(new Date());
-                            mNotesUpdateDao.save(notesUpdate);
-                            if (syncObject.getNotes() != null) {
-                                mNotesDao.saveNotes(ListUtils.map(Arrays.asList(syncObject.getNotes()),
-                                        new Function<JNote, Note>() {
-                                            @Override
-                                            public Note apply(JNote jNote) {
-                                                Note note = new Note();
-                                                note.setGuid(jNote.getGuid());
-                                                if (jNote.getDate() != null) {
-                                                    note.setDate(new Date(jNote.getDate()));
-                                                }
-                                                note.setTitle(jNote.getTitle());
-                                                note.setContent(jNote.getContent());
-                                                note.setSynced(true);
-                                                if (jNote.getDeleted() != null) {
-                                                    note.setDeleted(jNote.getDeleted());
-                                                }
-                                                return note;
-                                            }
-                                        }));
-                            }
-                        }
-                    }
-                } else {
-                    throw new SyncException(response.message());
-                }
+    @NonNull
+    public SyncObject synchronize(SyncObject syncObject) throws IOException, SyncException {
+        RequestBody requestBody = RequestBody.create(JSON_MEDIA_TYPE, toJson(syncObject));
+        Request request = new Request.Builder()
+                .url(NOTES_SERVER_URL)
+                .post(requestBody)
+                .build();
+        try (Response response = mClient.get().newCall(request).execute()) {
+            if (response.isSuccessful() && response.body() != null) {
+                return Objects.requireNonNull(fromJson(response.body().string()), "Null sync object was received from server");
+            } else {
+                throw new SyncException(response.message());
             }
-        } finally {
-            syncLock.unlock();
         }
-    }
-
-    private SyncObject createSyncObject() {
-        return new SyncObject(mNotesUpdateDao.getLastVersion(), mCommonDataDao.getUser(),
-                ListUtils.map(mNotesDao.getUnsyncedNotes(), new Function<Note, JNote>() {
-                    @Override
-                    public JNote apply(Note note) {
-                        return new JNote(note.getGuid(), note.getTitle(), note.getContent(), note.getDate().getTime(), note.isDeleted());
-                    }
-                }));
     }
 
     @NonNull
     private String toJson(@NonNull SyncObject syncObject) {
-        return new Gson().toJson(syncObject);
+        return mGson.toJson(syncObject);
     }
 
     @Nullable
@@ -116,7 +55,7 @@ public class RemoteNotesService {
         if (json == null) {
             return null;
         }
-        return new Gson().fromJson(json, SyncObject.class);
+        return mGson.fromJson(json, SyncObject.class);
     }
 
     public static class SyncObject {
@@ -127,7 +66,7 @@ public class RemoteNotesService {
 
         public SyncObject() {}
 
-        private SyncObject(@Nullable Long version, @Nullable String user, @NonNull Collection<JNote> notes) {
+        public SyncObject(@Nullable Long version, @Nullable String user, @NonNull Collection<JNote> notes) {
             this.version = version;
             this.user = user;
             this.notes = notes.toArray(new JNote[0]);
