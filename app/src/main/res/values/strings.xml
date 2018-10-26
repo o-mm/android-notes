@@ -5,8 +5,11 @@
     <string name="note_content">Content</string>
     <string name="bottom_sheet_peaker">::::::</string>
     <string name="sort_by">Sort by</string>
-    <string name="arrow_down">↓</string>
-    <string name="arrow_up">↑</string>
+    <string name="no_network_message">Sync error. No network is available</string>
+    <string name="sync_failed">Sync error. Failed to sync data</string>
+    <string name="sync_success">Notes are synchronized successfully</string>
+    <string name="synchronize">Synchronize</string>
+    <string name="last_sync">Last sync: %s</string>
     <string-array name="sort_by_items">
         <item>Date</item>
         <item>Title</item>

@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Consumer;
+import android.text.format.DateFormat;
 
 import com.example.ov_mm.notes.repository.NoteWrapper;
 import com.example.ov_mm.notes.repository.NotesRepository;
@@ -15,17 +16,25 @@ import com.example.ov_mm.notes.ui.SearchSortFragment;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearchSortListener {
 
     @NonNull private final NotesRepository mRepository;
     private boolean initialized;
     @NonNull private final MutableLiveData<List<NoteWrapper>> mNotes = new MutableLiveData<>();
+    @NonNull private final SyncInfo mSyncInfo = new SyncInfo();
+    @NonNull private MutableLiveData<String> mLastSyncText = new MutableLiveData<>();
     @Nullable private String mTerm;
     @Nullable private SortProperty mSortProperty;
     @Nullable private AsyncTask mLoadTask;
+    @Nullable private volatile NotesRepository.NotesSyncFuture mNotesSyncFuture;
+    private volatile boolean mSyncTaskRunning;
+    @NonNull private final Lock syncLock = new ReentrantLock();
     private boolean mDesc;
 
     @NonNull private final Comparator defaultComparator = new Comparator<Comparable>() {
@@ -43,6 +52,7 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
 
     public ViewNotesVm(@NonNull NotesRepository repository) {
         mRepository = repository;
+        mLastSyncText.setValue(getLastSyncFormatted());
     }
 
     public void init(@Nullable String term, @Nullable SortProperty sortProperty, boolean desc) {
@@ -90,6 +100,74 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
         }
     }
 
+    @NonNull
+    public NoteWrapper createNote() {
+        return mRepository.createNote();
+    }
+
+    @NonNull
+    public LiveData<String> getLastSyncText() {
+        return mLastSyncText;
+    }
+
+    @NonNull
+    public SyncInfo getSyncInfo() {
+        return mSyncInfo;
+    }
+
+    public void startSyncTask() {
+        mSyncInfo.setRunning(true);
+        mSyncInfo.setSyncResult(null);
+        NotesRepository.NotesSyncFuture notesSyncFuture = mNotesSyncFuture;
+        if (notesSyncFuture != null) {
+            notesSyncFuture.cancel();
+        }
+        mSyncTaskRunning = true;
+        notesSyncFuture = mRepository.syncNotes(new Consumer<SyncInfo.SyncResult>() {
+            @Override
+            public void accept(SyncInfo.SyncResult syncResult) {
+                mSyncInfo.postSyncResult(syncResult);
+                mLastSyncText.postValue(getLastSyncFormatted());
+                mSyncInfo.postRunning(false);
+                syncLock.lock();
+                try {
+                    mNotesSyncFuture = null;
+                    mSyncTaskRunning = false;
+                } finally {
+                    syncLock.unlock();
+                }
+            }
+        });
+        if (!mSyncTaskRunning) {
+            syncLock.lock();
+            try {
+                if (!mSyncTaskRunning) {
+                    mNotesSyncFuture = notesSyncFuture;
+                }
+            } finally {
+                syncLock.unlock();
+            }
+        }
+    }
+
+    public void cancelSyncTask() {
+        NotesRepository.NotesSyncFuture notesSyncFuture = mNotesSyncFuture;
+        if (notesSyncFuture != null) {
+            notesSyncFuture.cancel();
+        }
+        mNotesSyncFuture = null;
+        mSyncInfo.setRunning(false);
+    }
+
+    @Nullable
+    private String getLastSyncFormatted() {
+        Date lastSyncDate = mRepository.getLastSyncDate();
+        if (lastSyncDate != null) {
+            return DateFormat.format("yyyy-MM-dd HH:mm", lastSyncDate).toString();
+        }
+        return null;
+    }
+
     private void loadNotes() {
         if (mLoadTask != null) {
             mLoadTask.cancel(true);
@@ -101,11 +179,6 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
                 mLoadTask = null;
             }
         }, mTerm, mSortProperty, mDesc);
-    }
-
-    @NonNull
-    public NoteWrapper createNote() {
-        return mRepository.createNote();
     }
 
     @NonNull
@@ -133,6 +206,7 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     @Override
     protected void onCleared() {
         super.onCleared();
+        cancelSyncTask();
         if (mLoadTask != null) {
             mLoadTask.cancel(true);
         }

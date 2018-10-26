@@ -6,11 +6,17 @@ public class Note {
 
     private Long mId;
 
+    private String mGuid;
+
     private Date mDate;
 
     private String mTitle;
 
     private String mContent;
+
+    private boolean deleted;
+
+    private boolean mSynced;
 
     public Long getId() {
         return mId;
@@ -18,6 +24,14 @@ public class Note {
 
     public void setId(Long id) {
         this.mId = id;
+    }
+
+    public String getGuid() {
+        return mGuid;
+    }
+
+    public void setGuid(String guid) {
+        this.mGuid = guid;
     }
 
     public Date getDate() {
@@ -44,12 +58,19 @@ public class Note {
         this.mContent = content;
     }
 
-    public static Note create(Long id, Date date, String title, String content) {
-        Note note = new Note();
-        note.mId = id;
-        note.mDate = date;
-        note.mTitle = title;
-        note.mContent = content;
-        return note;
+    public boolean isSynced() {
+        return mSynced;
+    }
+
+    public void setSynced(boolean synced) {
+        this.mSynced = synced;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }
