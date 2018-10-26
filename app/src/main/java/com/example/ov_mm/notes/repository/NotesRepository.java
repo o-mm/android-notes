@@ -6,10 +6,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.util.Consumer;
 
 import com.example.ov_mm.notes.model.Note;
-import com.example.ov_mm.notes.service.dao.CommonDataDao;
 import com.example.ov_mm.notes.service.dao.NotesDao;
 import com.example.ov_mm.notes.service.dao.NotesUpdateDao;
-import com.example.ov_mm.notes.service.network.RemoteNotesService;
 import com.example.ov_mm.notes.vm.SyncInfo;
 
 import java.util.ArrayList;
@@ -17,25 +15,19 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class NotesRepository {
 
     @NonNull private final NotesDao mNotesDao;
     @NonNull private final NotesUpdateDao mNotesUpdateDao;
-    @NonNull private final CommonDataDao mCommonDataDao;
-    @NonNull private final RemoteNotesService mRemoteNotesService;
-    @NonNull private final Lock notesSynchronizationLock = new ReentrantLock();
+    @NonNull private final NotesSyncTaskProvider mNotesSyncTaskProvider;
 
     public NotesRepository(@NonNull NotesDao notesDao,
                            @NonNull NotesUpdateDao notesUpdateDao,
-                           @NonNull CommonDataDao commonDataDao,
-                           @NonNull RemoteNotesService remoteNotesService) {
-        this.mNotesDao = notesDao;
+                           @NonNull NotesSyncTaskProvider notesSyncTaskProvider) {
+        mNotesDao = notesDao;
         mNotesUpdateDao = notesUpdateDao;
-        mCommonDataDao = commonDataDao;
-        mRemoteNotesService = remoteNotesService;
+        mNotesSyncTaskProvider = notesSyncTaskProvider;
     }
 
     @NonNull
@@ -81,13 +73,7 @@ public class NotesRepository {
 
     @NonNull
     public NotesSyncFuture syncNotes(Consumer<SyncInfo.SyncResult> asyncConsumer) {
-        NotesSyncTask notesSyncTask = new NotesSyncTask(
-                asyncConsumer,
-                mRemoteNotesService,
-                mCommonDataDao,
-                mNotesDao,
-                mNotesUpdateDao,
-                notesSynchronizationLock);
+        NotesSyncTask notesSyncTask = mNotesSyncTaskProvider.provideNotesSyncTask(asyncConsumer);
         return new NotesSyncFuture(Executors.newSingleThreadExecutor().submit(notesSyncTask), notesSyncTask);
     }
 
