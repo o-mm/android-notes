@@ -1,19 +1,19 @@
 package com.example.ov_mm.notes.vm;
 
+import android.annotation.SuppressLint;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
-import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Consumer;
-import android.text.format.DateFormat;
 
 import com.example.ov_mm.notes.repository.NoteWrapper;
 import com.example.ov_mm.notes.repository.NotesRepository;
 import com.example.ov_mm.notes.repository.SortProperty;
 import com.example.ov_mm.notes.ui.SearchSortFragment;
 
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -27,12 +27,12 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     @NonNull private final NotesRepository mRepository;
     private boolean initialized;
     @NonNull private final MutableLiveData<List<NoteWrapper>> mNotes = new MutableLiveData<>();
+    @NonNull private final MutableLiveData<String> mLastSyncText = new MutableLiveData<>();
     @NonNull private final SyncInfo mSyncInfo = new SyncInfo();
-    @NonNull private MutableLiveData<String> mLastSyncText = new MutableLiveData<>();
     @Nullable private String mTerm;
     @Nullable private SortProperty mSortProperty;
-    @Nullable private AsyncTask mLoadTask;
-    @Nullable private volatile NotesRepository.NotesSyncFuture mNotesSyncFuture;
+    @Nullable private NotesRepository.CancellableTask mLoadTask;
+    @Nullable private volatile NotesRepository.CancellableTask mNotesSyncFuture;
     private volatile boolean mSyncTaskRunning;
     @NonNull private final Lock syncLock = new ReentrantLock();
     private boolean mDesc;
@@ -52,7 +52,7 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
 
     public ViewNotesVm(@NonNull NotesRepository repository) {
         mRepository = repository;
-        mLastSyncText.setValue(getLastSyncFormatted());
+        setLastSyncText(getLastSyncFormatted());
     }
 
     public void init(@Nullable String term, @Nullable SortProperty sortProperty, boolean desc) {
@@ -88,7 +88,7 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     public void onSortPropertyChanged(@Nullable SortProperty sortProperty) {
         if (initialized) {
             mSortProperty = sortProperty;
-            mNotes.setValue(reorderNotes(mNotes.getValue()));
+            setNotes(reorderNotes(getNotes().getValue()));
         }
     }
 
@@ -96,7 +96,7 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     public void onOrderChanged(boolean desc) {
         if (initialized) {
             mDesc = desc;
-            mNotes.setValue(reorderNotes(mNotes.getValue()));
+            setNotes(reorderNotes(getNotes().getValue()));
         }
     }
 
@@ -116,9 +116,9 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     }
 
     public void startSyncTask() {
-        mSyncInfo.setRunning(true);
-        mSyncInfo.setSyncResult(null);
-        NotesRepository.NotesSyncFuture notesSyncFuture = mNotesSyncFuture;
+        getSyncInfo().setRunning(true);
+        getSyncInfo().setSyncResult(null);
+        NotesRepository.CancellableTask notesSyncFuture = mNotesSyncFuture;
         if (notesSyncFuture != null) {
             notesSyncFuture.cancel();
         }
@@ -126,9 +126,9 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
         notesSyncFuture = mRepository.syncNotes(new Consumer<SyncInfo.SyncResult>() {
             @Override
             public void accept(SyncInfo.SyncResult syncResult) {
-                mSyncInfo.postSyncResult(syncResult);
-                mLastSyncText.postValue(getLastSyncFormatted());
-                mSyncInfo.postRunning(false);
+                getSyncInfo().postSyncResult(syncResult);
+                postLastSyncText(getLastSyncFormatted());
+                getSyncInfo().postRunning(false);
                 syncLock.lock();
                 try {
                     mNotesSyncFuture = null;
@@ -138,10 +138,10 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
                 }
             }
         });
-        if (!mSyncTaskRunning) {
+        if (mSyncTaskRunning) {
             syncLock.lock();
             try {
-                if (!mSyncTaskRunning) {
+                if (mSyncTaskRunning) {
                     mNotesSyncFuture = notesSyncFuture;
                 }
             } finally {
@@ -151,31 +151,44 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     }
 
     public void cancelSyncTask() {
-        NotesRepository.NotesSyncFuture notesSyncFuture = mNotesSyncFuture;
+        NotesRepository.CancellableTask notesSyncFuture = mNotesSyncFuture;
         if (notesSyncFuture != null) {
             notesSyncFuture.cancel();
         }
         mNotesSyncFuture = null;
-        mSyncInfo.setRunning(false);
+        getSyncInfo().setRunning(false);
     }
 
+    void setNotes(@Nullable List<NoteWrapper> notes) {
+        mNotes.setValue(notes);
+    }
+
+    void postLastSyncText(@Nullable String lastSyncDate) {
+        mLastSyncText.postValue(lastSyncDate);
+    }
+
+    void setLastSyncText(@Nullable String lastSyncDate) {
+        mLastSyncText.setValue(lastSyncDate);
+    }
+
+    @SuppressLint("SimpleDateFormat")
     @Nullable
     private String getLastSyncFormatted() {
         Date lastSyncDate = mRepository.getLastSyncDate();
         if (lastSyncDate != null) {
-            return DateFormat.format("yyyy-MM-dd HH:mm", lastSyncDate).toString();
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm").format(lastSyncDate);
         }
         return null;
     }
 
     private void loadNotes() {
         if (mLoadTask != null) {
-            mLoadTask.cancel(true);
+            mLoadTask.cancel();
         }
         mLoadTask = mRepository.loadNotes(new Consumer<List<NoteWrapper>>() {
             @Override
             public void accept(List<NoteWrapper> notes) {
-                mNotes.setValue(reorderNotes(notes));
+                setNotes(reorderNotes(notes));
                 mLoadTask = null;
             }
         }, mTerm, mSortProperty, mDesc);
@@ -208,7 +221,7 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
         super.onCleared();
         cancelSyncTask();
         if (mLoadTask != null) {
-            mLoadTask.cancel(true);
+            mLoadTask.cancel();
         }
         mLoadTask = null;
     }
