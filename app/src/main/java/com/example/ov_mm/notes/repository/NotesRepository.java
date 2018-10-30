@@ -31,8 +31,8 @@ public class NotesRepository {
     }
 
     @NonNull
-    public AsyncTask loadNotes(@NonNull Consumer<List<NoteWrapper>> resultConsumer, @Nullable String query, @Nullable SortProperty sortBy, boolean desc) {
-        return new DataSelectionTask(mNotesDao, resultConsumer, query, sortBy, desc).execute();
+    public CancellableTask loadNotes(@NonNull Consumer<List<NoteWrapper>> resultConsumer, @Nullable String query, @Nullable SortProperty sortBy, boolean desc) {
+        return (CancellableTask) new DataSelectionTask(mNotesDao, resultConsumer, query, sortBy, desc).execute();
     }
 
     public void saveNote(@NonNull NoteWrapper note) {
@@ -72,12 +72,16 @@ public class NotesRepository {
     }
 
     @NonNull
-    public NotesSyncFuture syncNotes(Consumer<SyncInfo.SyncResult> asyncConsumer) {
+    public CancellableTask syncNotes(@NonNull Consumer<SyncInfo.SyncResult> asyncConsumer) {
         NotesSyncTask notesSyncTask = mNotesSyncTaskProvider.provideNotesSyncTask(asyncConsumer);
         return new NotesSyncFuture(Executors.newSingleThreadExecutor().submit(notesSyncTask), notesSyncTask);
     }
 
-    public static class DataSelectionTask extends AsyncTask<Object, Void, List<NoteWrapper>> {
+    public interface CancellableTask {
+        void cancel();
+    }
+
+    private static class DataSelectionTask extends AsyncTask<Object, Void, List<NoteWrapper>> implements CancellableTask {
 
         @NonNull private final NotesDao mNotesDao;
         @Nullable private Consumer<List<NoteWrapper>> mResultConsumer;
@@ -119,17 +123,23 @@ public class NotesRepository {
         protected void onCancelled() {
             mResultConsumer = null;
         }
+
+        @Override
+        public void cancel() {
+            cancel(true);
+        }
     }
 
-    public static class NotesSyncFuture {
+    private static class NotesSyncFuture implements CancellableTask {
         @NonNull private final Future mFuture;
-        @NonNull private final NotesSyncTask mTask;
+        @NonNull private final CancellableTask mTask;
 
-        public NotesSyncFuture(@NonNull Future future, @NonNull NotesSyncTask task) {
+        public NotesSyncFuture(@NonNull Future future, @NonNull CancellableTask task) {
             mFuture = future;
             mTask = task;
         }
 
+        @Override
         public void cancel() {
             mTask.cancel();
             mFuture.cancel(true);
