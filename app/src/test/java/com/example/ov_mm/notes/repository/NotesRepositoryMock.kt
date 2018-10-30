@@ -8,6 +8,8 @@ import com.example.ov_mm.notes.vm.SyncInfo
 import org.mockito.Mockito
 import java.util.*
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.Comparator
 
 class NotesRepositoryMock(val atStart: CountDownLatch, val atFinish: CountDownLatch) : NotesRepository(
@@ -16,9 +18,19 @@ class NotesRepositoryMock(val atStart: CountDownLatch, val atFinish: CountDownLa
         NotesSyncTaskProvider {
             asyncConsumer ->
             object: NotesSyncTask {
-                var currentThread: Thread? = null
+                @Volatile var currentThread: Thread? = null
+                @Volatile var cancelled: Boolean = false
+                var lock: Lock = ReentrantLock()
+
                 override fun run() {
-                    currentThread = Thread.currentThread()
+                    lock.lock()
+                    try {
+                        if (cancelled)
+                            return;
+                        currentThread = Thread.currentThread()
+                    } finally {
+                        lock.unlock()
+                    }
                     try {
                         atStart.await()
                         asyncConsumer.accept(SyncInfo.SyncResult.SUCCESS)
@@ -28,7 +40,13 @@ class NotesRepositoryMock(val atStart: CountDownLatch, val atFinish: CountDownLa
                 }
 
                 override fun cancel() {
-                    currentThread?.interrupt()
+                    lock.lock()
+                    try {
+                        cancelled = true
+                        currentThread?.interrupt() ?: atFinish.countDown()
+                    } finally {
+                        lock.unlock()
+                    }
                 }
             }
         }) {

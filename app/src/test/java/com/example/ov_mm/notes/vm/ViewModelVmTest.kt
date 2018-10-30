@@ -1,18 +1,19 @@
 package com.example.ov_mm.notes.vm
 
-import android.arch.lifecycle.LiveData
+import android.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.ov_mm.notes.repository.NoteWrapper
 import com.example.ov_mm.notes.repository.NotesRepositoryMock
 import com.example.ov_mm.notes.repository.SortProperty
 import org.junit.Assert.*
+import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mockito
-import org.mockito.runners.MockitoJUnitRunner
 import java.util.concurrent.CountDownLatch
 
-@RunWith(MockitoJUnitRunner::class)
 class ViewModelVmTest {
+
+    @Rule
+    @JvmField
+    val rule = InstantTaskExecutorRule()
 
     @Test
     fun sortingTest() {
@@ -90,75 +91,8 @@ class ViewModelVmTest {
         assertEquals(false, vm.syncInfo.running.value)
     }
 
-    private fun createViewNotesVm(atStart: CountDownLatch = CountDownLatch(1), atFinish: CountDownLatch = CountDownLatch(1)): ViewNotesVm {
-        val notesData: Data<MutableList<NoteWrapper>?> = Data()
-        val lastSyncData: Data<String?> = Data()
-        val runningData: Data<Boolean?> = Data()
-        val syncResultData: Data<SyncInfo.SyncResult?> = Data()
-
-        val syncInfo = object : SyncInfo() {
-            override fun getRunning(): LiveData<Boolean> {
-                val mock = Mockito.mock(LiveData::class.java as Class<LiveData<Boolean>>)
-                Mockito.`when`(mock.value).then { _ -> runningData.data }
-                return mock
-            }
-
-            override fun getSyncResult(): LiveData<SyncResult> {
-                val mock = Mockito.mock(LiveData::class.java as Class<LiveData<SyncResult>>)
-                Mockito.`when`(mock.value).then { _ -> syncResultData.data }
-                return mock
-            }
-
-            override fun setRunning(running: Boolean?) {
-                runningData.data = running
-            }
-
-            override fun setSyncResult(syncResult: SyncResult?) {
-                syncResultData.data = syncResult
-            }
-
-            override fun postSyncResult(syncResult: SyncResult?) {
-                syncResultData.data = syncResult
-            }
-
-            override fun postRunning(running: Boolean) {
-                runningData.data = running
-            }
-        }
-
-        return object : ViewNotesVm(NotesRepositoryMock(atStart, atFinish)) {
-            override fun getNotes(): LiveData<MutableList<NoteWrapper>> {
-                val mock = Mockito.mock(LiveData::class.java as Class<LiveData<MutableList<NoteWrapper>>>)
-                Mockito.`when`(mock.value).then { _ -> notesData.data }
-                return mock
-            }
-
-            override fun getLastSyncText(): LiveData<String> {
-                val mock = Mockito.mock(LiveData::class.java as Class<LiveData<String>>)
-                Mockito.`when`(mock.value).then { _ -> lastSyncData.data }
-                return mock
-            }
-
-            override fun setNotes(notes: MutableList<NoteWrapper>?) {
-                notesData.data = notes
-            }
-
-            override fun postLastSyncText(lastSyncDate: String?) {
-                lastSyncData.data = lastSyncDate
-            }
-
-            override fun setLastSyncText(lastSyncDate: String?) {
-                lastSyncData.data = lastSyncDate
-            }
-
-            override fun getSyncInfo(): SyncInfo {
-                return syncInfo
-            }
-        }
-    }
-
-    private class Data<T> {
-
-        var data: T? = null
+    private fun createViewNotesVm(atStart: CountDownLatch = CountDownLatch(1),
+                                  atFinish: CountDownLatch = CountDownLatch(1)): ViewNotesVm {
+        return ViewNotesVm(NotesRepositoryMock(atStart, atFinish))
     }
 }
