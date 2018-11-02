@@ -48,6 +48,12 @@ public class GenerateNotesService extends IntentService {
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mEventManager.stopGenerating();
+    }
+
+    @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         startForeground();
         boolean failed = false;
