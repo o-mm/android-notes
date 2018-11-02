@@ -15,7 +15,6 @@ import android.view.ViewGroup;
 
 import com.example.ov_mm.notes.R;
 import com.example.ov_mm.notes.repository.NoteWrapper;
-import com.example.ov_mm.notes.vm.SyncInfo;
 import com.example.ov_mm.notes.vm.ViewNotesVm;
 
 import java.util.List;
@@ -69,14 +68,6 @@ public class ViewNotesFragment extends Fragment implements OnBackPressedHandler 
             public void onChanged(@Nullable List<NoteWrapper> notes) {
                 mNoteAdapter.updateData(notes);
                 mNoteAdapter.notifyDataSetChanged();
-            }
-        });
-        mInteractionListener.getViewVm().getSyncInfo().getSyncResult().observe(this, new Observer<SyncInfo.SyncResult>() {
-            @Override
-            public void onChanged(@Nullable SyncInfo.SyncResult syncResult) {
-                if (syncResult == SyncInfo.SyncResult.SUCCESS) {
-                    mInteractionListener.getViewVm().refreshNotes();
-                }
             }
         });
         return view;

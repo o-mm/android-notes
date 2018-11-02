@@ -54,7 +54,11 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.11.0'
     //gson
     implementation 'com.google.code.gson:gson:2.8.5'
+    //kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    //rxJava
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.3'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
 }
 repositories {
     mavenCentral()

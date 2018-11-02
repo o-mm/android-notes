@@ -8,13 +8,15 @@ import android.support.v4.util.Consumer;
 import com.example.ov_mm.notes.model.Note;
 import com.example.ov_mm.notes.service.dao.NotesDao;
 import com.example.ov_mm.notes.service.dao.NotesUpdateDao;
-import com.example.ov_mm.notes.vm.SyncInfo;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import io.reactivex.Completable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
 public class NotesRepository {
 
@@ -72,9 +74,9 @@ public class NotesRepository {
     }
 
     @NonNull
-    public CancellableTask syncNotes(@NonNull Consumer<SyncInfo.SyncResult> asyncConsumer) {
-        NotesSyncTask notesSyncTask = mNotesSyncTaskProvider.provideNotesSyncTask(asyncConsumer);
-        return new NotesSyncFuture(Executors.newSingleThreadExecutor().submit(notesSyncTask), notesSyncTask);
+    public Completable syncNotes() {
+        NotesSyncTask notesSyncTask = mNotesSyncTaskProvider.provideNotesSyncTask();
+        return Completable.fromAction(notesSyncTask).subscribeOn(Schedulers.single()).observeOn(AndroidSchedulers.mainThread());
     }
 
     public void fillDatabase() {
