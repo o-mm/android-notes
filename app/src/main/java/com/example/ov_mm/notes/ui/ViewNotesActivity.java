@@ -1,10 +1,7 @@
 package com.example.ov_mm.notes.ui;
 
-import android.app.PendingIntent;
 import android.arch.lifecycle.Observer;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -13,7 +10,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.util.Consumer;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -27,7 +23,7 @@ import android.widget.Toast;
 import com.example.ov_mm.notes.R;
 import com.example.ov_mm.notes.repository.NoteWrapper;
 import com.example.ov_mm.notes.ui.di.BaseActivity;
-import com.example.ov_mm.notes.ui.service.GenerateNotesService;
+import com.example.ov_mm.notes.vm.ActivityViewModel;
 import com.example.ov_mm.notes.vm.SyncInfo;
 import com.example.ov_mm.notes.vm.ViewNotesVm;
 
@@ -39,11 +35,11 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
         SearchSortFragment.SearchSortListenerProvider {
 
     @Inject ViewNotesVm mViewNotesVm;
+    @Inject ActivityViewModel mActivityViewModel;
     private View mToolsContainer;
     private TextView mLastSyncText;
     private ProgressBar mSyncProgressBar;
     private ImageButton mSyncButton;
-    @NonNull private final CommonBroadcastReceiver mBroadcastReceiver = new CommonBroadcastReceiver();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,13 +93,11 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
     @Override
     protected void onResume() {
         super.onResume();
-        this.registerReceiver(mBroadcastReceiver, new IntentFilter(CommonBroadcastReceiver.NOTES_GENERATION_FINISHED));
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        this.unregisterReceiver(mBroadcastReceiver);
     }
 
     @Override
@@ -119,24 +113,22 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(R.string.generate_notes).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+        final MenuItem menuItem = menu.add(R.string.generate_notes);
+        switchGenMenuItem(menuItem, mActivityViewModel.getGeneratingRunning().getValue());
+        mActivityViewModel.getGeneratingRunning().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(@Nullable Boolean aBoolean) {
+                switchGenMenuItem(menuItem, aBoolean);
+                if (!Boolean.TRUE.equals(aBoolean)) {
+                    mViewNotesVm.refreshNotes();
+                }
+            }
+        });
+        menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(final MenuItem item) {
                 startNotesGenService();
-                final CharSequence title = item.getTitle();
-                item.setTitle(R.string.generating_notes);
-                item.setEnabled(false);
                 Toast.makeText(ViewNotesActivity.this, R.string.generating_notes, Toast.LENGTH_LONG).show();
-                mBroadcastReceiver.addListener(CommonBroadcastReceiver.NOTES_GENERATION_FINISHED,
-                    new Consumer<Intent>() {
-                        @Override
-                        public void accept(Intent intent) {
-                            item.setTitle(title);
-                            item.setEnabled(true);
-                            mViewNotesVm.refreshNotes();
-                            mBroadcastReceiver.removeListener(CommonBroadcastReceiver.NOTES_GENERATION_FINISHED, this);
-                        }
-                    });
                 return true;
             }
         });
@@ -174,6 +166,16 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
     @Override
     public ViewNotesVm getViewVm() {
         return mViewNotesVm;
+    }
+
+    private void switchGenMenuItem(MenuItem menuItem, Boolean genRunning) {
+        if (Boolean.TRUE.equals(genRunning)) {
+            menuItem.setTitle(R.string.generating_notes);
+            menuItem.setEnabled(false);
+        } else {
+            menuItem.setTitle(R.string.generate_notes);
+            menuItem.setEnabled(true);
+        }
     }
 
     @NonNull
@@ -221,10 +223,6 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
     }
 
     private void startNotesGenService() {
-        PendingIntent broadcast = PendingIntent.getBroadcast(this, 0,
-            new Intent(CommonBroadcastReceiver.NOTES_GENERATION_FINISHED), 0);
-        Intent intent = new Intent(this, GenerateNotesService.class);
-        intent.putExtra(GenerateNotesService.FINISH_GENERATING_BROADCAST, broadcast);
-        startService(intent);
+        mActivityViewModel.startService();
     }
 }

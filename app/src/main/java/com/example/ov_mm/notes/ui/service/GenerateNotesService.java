@@ -14,6 +14,7 @@ import android.util.Log;
 
 import com.example.ov_mm.notes.NotesApp;
 import com.example.ov_mm.notes.R;
+import com.example.ov_mm.notes.event.EventManager;
 import com.example.ov_mm.notes.repository.NotesRepository;
 import com.example.ov_mm.notes.ui.ViewNotesActivity;
 
@@ -24,7 +25,7 @@ public class GenerateNotesService extends IntentService {
     private static final int NOTIFICATION_FOREGROUND_ID = 1;
     private static final int NOTIFICATION_FINISHED_ID = 2;
     private NotesRepository mRepository;
-    private PendingIntent mBroadcast;
+    private EventManager mEventManager;
 
     public GenerateNotesService() {
         this(TAG);
@@ -38,13 +39,11 @@ public class GenerateNotesService extends IntentService {
     public void onCreate() {
         super.onCreate();
         mRepository = ((NotesApp) getApplication()).getNotesAppComponent().repository();
+        mEventManager = ((NotesApp) getApplication()).getNotesAppComponent().eventManager();
     }
 
     @Override
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
-        if (intent != null) {
-            mBroadcast = intent.getParcelableExtra(FINISH_GENERATING_BROADCAST);
-        }
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -66,13 +65,7 @@ public class GenerateNotesService extends IntentService {
                         getString(failed ? R.string.generate_notes_failed : R.string.generate_notes_finished),
                         getString(R.string.generate_notes_title),
                         true));
-            if (mBroadcast != null) {
-                try {
-                    mBroadcast.send();
-                } catch (PendingIntent.CanceledException e) {
-                    Log.e(TAG, e.getMessage(), e);
-                }
-            }
+            mEventManager.stopGenerating();
         }
     }
 
