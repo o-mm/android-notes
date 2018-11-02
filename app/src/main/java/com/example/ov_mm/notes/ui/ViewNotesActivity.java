@@ -126,6 +126,7 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
                 final CharSequence title = item.getTitle();
                 item.setTitle(R.string.generating_notes);
                 item.setEnabled(false);
+                Toast.makeText(ViewNotesActivity.this, R.string.generating_notes, Toast.LENGTH_LONG).show();
                 mBroadcastReceiver.addListener(CommonBroadcastReceiver.NOTES_GENERATION_FINISHED,
                     new Consumer<Intent>() {
                         @Override
