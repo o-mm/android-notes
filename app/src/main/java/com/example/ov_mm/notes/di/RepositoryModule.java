@@ -2,6 +2,7 @@ package com.example.ov_mm.notes.di;
 
 import android.support.annotation.NonNull;
 
+import com.example.ov_mm.notes.db.TransactionManager;
 import com.example.ov_mm.notes.repository.NotesRepository;
 import com.example.ov_mm.notes.repository.NotesSyncTaskProvider;
 import com.example.ov_mm.notes.repository.NotesSyncTaskProviderImpl;
@@ -31,9 +32,10 @@ class RepositoryModule {
     @Singleton
     @NonNull
     NotesSyncTaskProvider provideNotesSyncTask(@NonNull NotesDao notesDao,
-                                                   @NonNull NotesUpdateDao notesUpdateDao,
-                                                   @NonNull CommonDataDao commonDataDao,
-                                                   @NonNull RemoteNotesService remoteNotesService) {
-        return new NotesSyncTaskProviderImpl(notesDao, notesUpdateDao, commonDataDao, remoteNotesService);
+                                               @NonNull NotesUpdateDao notesUpdateDao,
+                                               @NonNull CommonDataDao commonDataDao,
+                                               @NonNull RemoteNotesService remoteNotesService,
+                                               @NonNull TransactionManager transactionManager) {
+        return new NotesSyncTaskProviderImpl(notesDao, notesUpdateDao, commonDataDao, remoteNotesService, transactionManager);
     }
 }
