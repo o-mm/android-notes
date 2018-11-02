@@ -2,6 +2,7 @@ package com.example.ov_mm.notes.di;
 
 import android.support.annotation.NonNull;
 
+import com.example.ov_mm.notes.event.EventManager;
 import com.example.ov_mm.notes.repository.NotesRepository;
 import com.example.ov_mm.notes.ui.di.ActivityModule;
 import com.example.ov_mm.notes.ui.di.ActivitySubComponent;
@@ -24,4 +25,7 @@ public interface NotesAppComponent {
 
     @NonNull
     FragmentSubComponent fragmentSubComponent(FragmentModule fragmentModule);
+
+    @NonNull
+    EventManager eventManager();
 }

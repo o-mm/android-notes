@@ -6,7 +6,9 @@ import android.arch.lifecycle.ViewModelProvider;
 import android.arch.lifecycle.ViewModelProviders;
 import android.support.annotation.NonNull;
 
+import com.example.ov_mm.notes.event.EventManager;
 import com.example.ov_mm.notes.repository.NotesRepository;
+import com.example.ov_mm.notes.vm.ActivityViewModel;
 import com.example.ov_mm.notes.vm.ViewNotesVm;
 
 import dagger.Module;
@@ -31,13 +33,22 @@ public class ActivityModule {
     @ActivityScope
     @Provides
     @NonNull
-    ViewModelProvider.Factory provideFactory(final NotesRepository repository) {
+    ActivityViewModel provideActivityViewModel(@NonNull ViewModelProvider.Factory factory) {
+        return ViewModelProviders.of(mActivity, factory).get(ActivityViewModel.class);
+    }
+
+    @ActivityScope
+    @Provides
+    @NonNull
+    ViewModelProvider.Factory provideFactory(final NotesRepository repository, final EventManager eventManager) {
         return new ViewModelProvider.Factory() {
             @NonNull
             @Override
             public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
                 if (ViewNotesVm.class.equals(modelClass)) {
                     return (T) new ViewNotesVm(repository);
+                } else if (ActivityViewModel.class.equals(modelClass)) {
+                    return (T) new ActivityViewModel(mActivity.getApplication(), eventManager);
                 } else if (AndroidViewModel.class.isAssignableFrom(modelClass)) {
                     return ViewModelProvider.AndroidViewModelFactory.getInstance(mActivity.getApplication()).create(modelClass);
                 } else {

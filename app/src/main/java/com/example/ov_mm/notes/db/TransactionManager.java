@@ -6,16 +6,17 @@ import android.support.annotation.Nullable;
 
 public class TransactionManager {
 
-    private final SQLiteDatabase mDatabase;
+    @NonNull private final SQLiteDatabase mDatabase;
 
-    public TransactionManager(SQLiteDatabase db) {
+    public TransactionManager(@NonNull SQLiteDatabase db) {
         if (db.isReadOnly()) {
             throw new IllegalStateException("Database must be writable");
         }
         mDatabase = db;
     }
 
-    public <T> T doInTransaction(DbExecution<T> dbExecution) {
+    @Nullable
+    public <T> T doInTransaction(@NonNull DbExecution<T> dbExecution) {
         mDatabase.beginTransaction();
         try {
             T result = dbExecution.execute(mDatabase);
