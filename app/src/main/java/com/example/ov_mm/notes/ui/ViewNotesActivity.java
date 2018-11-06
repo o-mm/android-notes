@@ -12,6 +12,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -21,6 +23,7 @@ import android.widget.Toast;
 import com.example.ov_mm.notes.R;
 import com.example.ov_mm.notes.repository.NoteWrapper;
 import com.example.ov_mm.notes.ui.di.BaseActivity;
+import com.example.ov_mm.notes.vm.ActivityViewModel;
 import com.example.ov_mm.notes.vm.SyncInfo;
 import com.example.ov_mm.notes.vm.ViewNotesVm;
 
@@ -32,6 +35,7 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
         SearchSortFragment.SearchSortListenerProvider {
 
     @Inject ViewNotesVm mViewNotesVm;
+    @Inject ActivityViewModel mActivityViewModel;
     private View mToolsContainer;
     private TextView mLastSyncText;
     private ProgressBar mSyncProgressBar;
@@ -87,6 +91,16 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
     public void onListItemInteraction(@NonNull NoteWrapper note) {
         EditNoteFragment editNoteFragment = EditNoteFragment.newInstance(note.getId());
         getSupportFragmentManager()
@@ -95,6 +109,35 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
                 .replace(R.id.fragment_container, editNoteFragment)
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                 .commit();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        final MenuItem menuItem = menu.add(R.string.generate_notes);
+        switchGenMenuItem(menuItem, mActivityViewModel.getGeneratingRunning().getValue());
+        mActivityViewModel.getGeneratingRunning().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(@Nullable Boolean aBoolean) {
+                switchGenMenuItem(menuItem, aBoolean);
+                if (!Boolean.TRUE.equals(aBoolean)) {
+                    mViewNotesVm.refreshNotes();
+                }
+            }
+        });
+        menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(final MenuItem item) {
+                startNotesGenService();
+                Toast.makeText(ViewNotesActivity.this, R.string.generating_notes, Toast.LENGTH_LONG).show();
+                return true;
+            }
+        });
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -123,6 +166,16 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
     @Override
     public ViewNotesVm getViewVm() {
         return mViewNotesVm;
+    }
+
+    private void switchGenMenuItem(MenuItem menuItem, Boolean genRunning) {
+        if (Boolean.TRUE.equals(genRunning)) {
+            menuItem.setTitle(R.string.generating_notes);
+            menuItem.setEnabled(false);
+        } else {
+            menuItem.setTitle(R.string.generate_notes);
+            menuItem.setEnabled(true);
+        }
     }
 
     @NonNull
@@ -167,5 +220,9 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
 
     private void showMessage(int messageResource) {
         Toast.makeText(this, getText(messageResource), Toast.LENGTH_LONG).show();
+    }
+
+    private void startNotesGenService() {
+        mActivityViewModel.startService();
     }
 }

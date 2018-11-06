@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 
 import com.example.ov_mm.notes.db.NotesDatabaseHelper;
+import com.example.ov_mm.notes.db.TransactionManager;
 import com.example.ov_mm.notes.service.dao.CommonDataDao;
 import com.example.ov_mm.notes.service.dao.NotesDao;
 import com.example.ov_mm.notes.service.dao.NotesUpdateDao;
@@ -56,5 +57,12 @@ public class DaoModule {
     @NonNull
     SQLiteDatabase provideDatabase(@NonNull NotesDatabaseHelper helper) {
         return helper.getWritableDatabase();
+    }
+
+    @Singleton
+    @Provides
+    @NonNull
+    TransactionManager provideTransactionManager(@NonNull SQLiteDatabase db) {
+        return new TransactionManager(db);
     }
 }

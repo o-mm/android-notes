@@ -77,6 +77,10 @@ public class NotesRepository {
         return new NotesSyncFuture(Executors.newSingleThreadExecutor().submit(notesSyncTask), notesSyncTask);
     }
 
+    public void fillDatabase() {
+        mNotesDao.fillDatabase();
+    }
+
     public interface CancellableTask {
         void cancel();
     }

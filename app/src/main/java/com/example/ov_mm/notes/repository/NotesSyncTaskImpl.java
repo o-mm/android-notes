@@ -1,10 +1,12 @@
 package com.example.ov_mm.notes.repository;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Consumer;
 import android.util.Log;
 
+import com.example.ov_mm.notes.db.TransactionManager;
 import com.example.ov_mm.notes.model.Note;
 import com.example.ov_mm.notes.model.NotesUpdate;
 import com.example.ov_mm.notes.service.dao.CommonDataDao;
@@ -31,6 +33,7 @@ public class NotesSyncTaskImpl implements NotesSyncTask {
     @NonNull private final CommonDataDao mCommonDataDao;
     @NonNull private final NotesDao mNotesDao;
     @NonNull private final NotesUpdateDao mNotesUpdateDao;
+    @NonNull private final TransactionManager mTransactionManager;
     @NonNull private final Lock mSyncLock;
     @NonNull private final Lock mConsumeLock = new ReentrantLock();
 
@@ -39,12 +42,13 @@ public class NotesSyncTaskImpl implements NotesSyncTask {
                              @NonNull CommonDataDao commonDataDao,
                              @NonNull NotesDao notesDao,
                              @NonNull NotesUpdateDao notesUpdateDao,
-                             @NonNull Lock syncLock) {
+                             @NonNull TransactionManager transactionManager, @NonNull Lock syncLock) {
         mResultConsumer = resultConsumer;
         mRemoteNotesService = remoteNotesService;
         mCommonDataDao = commonDataDao;
         mNotesDao = notesDao;
         mNotesUpdateDao = notesUpdateDao;
+        mTransactionManager = transactionManager;
         mSyncLock = syncLock;
     }
 
@@ -62,34 +66,41 @@ public class NotesSyncTaskImpl implements NotesSyncTask {
     private void synchronize() throws IOException, SyncException {
         mSyncLock.lock();
         try {
-            RemoteNotesService.SyncObject syncObject = mRemoteNotesService.synchronize(createSyncObject());
+            final RemoteNotesService.SyncObject syncObject = mRemoteNotesService.synchronize(createSyncObject());
 
             if (syncObject.getVersion() != null && syncObject.getVersion() > 0) {
                 Long version = syncObject.getVersion();
-                NotesUpdate notesUpdate = new NotesUpdate();
+                final NotesUpdate notesUpdate = new NotesUpdate();
                 notesUpdate.setVersion(version);
                 notesUpdate.setDate(new Date());
-                mNotesUpdateDao.save(notesUpdate);
-                if (syncObject.getNotes() != null) {
-                    mNotesDao.saveNotes(ListUtils.map(Arrays.asList(syncObject.getNotes()),
-                            new Function<RemoteNotesService.JNote, Note>() {
-                                @Override
-                                public Note apply(RemoteNotesService.JNote jNote) {
-                                    Note note = new Note();
-                                    note.setGuid(jNote.getGuid());
-                                    if (jNote.getDate() != null) {
-                                        note.setDate(new Date(jNote.getDate()));
+                mTransactionManager.doInTransaction(new TransactionManager.DbExecution<Void>() {
+                    @Nullable
+                    @Override
+                    public Void execute(@NonNull SQLiteDatabase database) {
+                        mNotesUpdateDao.save(notesUpdate);
+                        if (syncObject.getNotes() != null) {
+                            mNotesDao.saveNotes(ListUtils.map(Arrays.asList(syncObject.getNotes()),
+                                new Function<RemoteNotesService.JNote, Note>() {
+                                    @Override
+                                    public Note apply(RemoteNotesService.JNote jNote) {
+                                        Note note = new Note();
+                                        note.setGuid(jNote.getGuid());
+                                        if (jNote.getDate() != null) {
+                                            note.setDate(new Date(jNote.getDate()));
+                                        }
+                                        note.setTitle(jNote.getTitle());
+                                        note.setContent(jNote.getContent());
+                                        note.setSynced(true);
+                                        if (jNote.getDeleted() != null) {
+                                            note.setDeleted(jNote.getDeleted());
+                                        }
+                                        return note;
                                     }
-                                    note.setTitle(jNote.getTitle());
-                                    note.setContent(jNote.getContent());
-                                    note.setSynced(true);
-                                    if (jNote.getDeleted() != null) {
-                                        note.setDeleted(jNote.getDeleted());
-                                    }
-                                    return note;
-                                }
-                            }));
-                }
+                                }));
+                        }
+                        return null;
+                    }
+                });
             }
         } finally {
             mSyncLock.unlock();

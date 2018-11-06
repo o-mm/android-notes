@@ -43,20 +43,30 @@ public class NotesDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        for (Class<? extends NotesDatabaseContract.TableDefinition> cls : NotesDatabaseContract.TABLES) {
-            db.execSQL(buildCreateTableQuery(cls));
+        db.beginTransaction();
+        try {
+            for (Class<? extends NotesDatabaseContract.TableDefinition> cls : NotesDatabaseContract.TABLES) {
+                db.execSQL(buildCreateTableQuery(cls));
+            }
+            new InitialMigration().executeMigration(db);
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
         }
-        new InitialMigration().executeMigration(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.beginTransaction();
         try {
             for (Class<? extends Migration> migration : NotesDatabaseContract.MIGRATIONS.subList(oldVersion - 1, newVersion - 1)) {
                 migration.newInstance().executeMigration(db);
             }
+            db.setTransactionSuccessful();
         } catch (IllegalAccessException | InstantiationException | SQLException e) {
             Log.e(TAG, "Unable to apply migrations from %d version to %d version", e);
+        } finally {
+            db.endTransaction();
         }
     }
 }

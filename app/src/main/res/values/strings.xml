@@ -10,6 +10,13 @@
     <string name="sync_success">Notes are synchronized successfully</string>
     <string name="synchronize">Synchronize</string>
     <string name="last_sync">Last sync: %s</string>
+    <string name="generate_notes">Generate Notes</string>
+    <string name="generate_notes_title">Notes\' Generation</string>
+    <string name="generate_notes_description">Generates notes for Notes app</string>
+    <string name="generate_notes_running">Running</string>
+    <string name="generate_notes_finished">Finished</string>
+    <string name="generate_notes_failed">Failed</string>
+    <string name="generating_notes">Generating notes...</string>
     <string-array name="sort_by_items">
         <item>Date</item>
         <item>Title</item>
