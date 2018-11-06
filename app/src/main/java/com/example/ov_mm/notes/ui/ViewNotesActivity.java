@@ -119,18 +119,12 @@ public class ViewNotesActivity extends BaseActivity implements ViewNotesFragment
             @Override
             public void onChanged(@Nullable Boolean aBoolean) {
                 switchGenMenuItem(menuItem, aBoolean);
-                if (!Boolean.TRUE.equals(aBoolean)) {
-                    mViewNotesVm.refreshNotes();
-                }
             }
         });
-        menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(final MenuItem item) {
-                startNotesGenService();
-                Toast.makeText(ViewNotesActivity.this, R.string.generating_notes, Toast.LENGTH_LONG).show();
-                return true;
-            }
+        menuItem.setOnMenuItemClickListener(item -> {
+            startNotesGenService();
+            Toast.makeText(ViewNotesActivity.this, R.string.generating_notes, Toast.LENGTH_LONG).show();
+            return true;
         });
         return super.onCreateOptionsMenu(menu);
     }

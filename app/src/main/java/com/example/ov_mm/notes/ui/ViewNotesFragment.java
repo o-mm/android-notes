@@ -96,7 +96,6 @@ public class ViewNotesFragment extends Fragment implements OnBackPressedHandler 
     @Override
     public void onResume() {
         super.onResume();
-        mInteractionListener.getViewVm().refreshNotes();
     }
 
     @Override

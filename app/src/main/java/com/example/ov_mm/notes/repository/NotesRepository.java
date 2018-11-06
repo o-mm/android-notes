@@ -1,9 +1,7 @@
 package com.example.ov_mm.notes.repository;
 
-import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.util.Consumer;
 
 import com.example.ov_mm.notes.model.Note;
 import com.example.ov_mm.notes.service.dao.NotesDao;
@@ -12,9 +10,10 @@ import com.example.ov_mm.notes.service.dao.NotesUpdateDao;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Future;
 
 import io.reactivex.Completable;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
@@ -33,8 +32,21 @@ public class NotesRepository {
     }
 
     @NonNull
-    public CancellableTask loadNotes(@NonNull Consumer<List<NoteWrapper>> resultConsumer, @Nullable String query, @Nullable SortProperty sortBy, boolean desc) {
-        return (CancellableTask) new DataSelectionTask(mNotesDao, resultConsumer, query, sortBy, desc).execute();
+    public Single<List<NoteWrapper>> loadNotes(@Nullable final String query, @Nullable final SortProperty sortBy, final boolean desc) {
+        return Single
+            .fromCallable(() -> mNotesDao.getNotes(query, sortBy == null ? null : sortBy.getDbColumn(), desc))
+            .map(notes -> {
+                List<NoteWrapper> result = new ArrayList<>();
+                for (Note note : notes) {
+                    result.add(new NoteWrapper(note));
+                }
+                return result;
+            })
+            .subscribeOn(Schedulers.single()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public Observable<Integer> getDbObservable() {
+        return mNotesDao.getDbObservable();
     }
 
     public void saveNote(@NonNull NoteWrapper note) {
@@ -82,74 +94,4 @@ public class NotesRepository {
     public void fillDatabase() {
         mNotesDao.fillDatabase();
     }
-
-    public interface CancellableTask {
-        void cancel();
-    }
-
-    private static class DataSelectionTask extends AsyncTask<Object, Void, List<NoteWrapper>> implements CancellableTask {
-
-        @NonNull private final NotesDao mNotesDao;
-        @Nullable private Consumer<List<NoteWrapper>> mResultConsumer;
-        @Nullable private final String mQuery;
-        @Nullable private final SortProperty mSortBy;
-        private final boolean mDesc;
-
-        public DataSelectionTask(@NonNull NotesDao dao,
-                                 @NonNull Consumer<List<NoteWrapper>> resultConsumer,
-                                 @Nullable String query,
-                                 @Nullable SortProperty sortBy,
-                                 boolean desc) {
-            mNotesDao = dao;
-            mResultConsumer = resultConsumer;
-            mQuery = query;
-            mSortBy = sortBy;
-            mDesc = desc;
-        }
-
-        @Override
-        protected List<NoteWrapper> doInBackground(Object... objects) {
-            List<NoteWrapper> result = new ArrayList<>();
-            List<Note> notes = mNotesDao.getNotes(mQuery, mSortBy == null ? null : mSortBy.getDbColumn(), mDesc);
-            for (Note note : notes) {
-                result.add(new NoteWrapper(note));
-            }
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(List<NoteWrapper> noteWrappers) {
-            super.onPostExecute(noteWrappers);
-            if (mResultConsumer != null) {
-                mResultConsumer.accept(noteWrappers);
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            mResultConsumer = null;
-        }
-
-        @Override
-        public void cancel() {
-            cancel(true);
-        }
-    }
-
-    private static class NotesSyncFuture implements CancellableTask {
-        @NonNull private final Future mFuture;
-        @NonNull private final CancellableTask mTask;
-
-        public NotesSyncFuture(@NonNull Future future, @NonNull CancellableTask task) {
-            mFuture = future;
-            mTask = task;
-        }
-
-        @Override
-        public void cancel() {
-            mTask.cancel();
-            mFuture.cancel(true);
-        }
-    }
-
 }

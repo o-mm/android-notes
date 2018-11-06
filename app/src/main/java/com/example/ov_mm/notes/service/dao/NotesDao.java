@@ -19,16 +19,24 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
+
 public class NotesDao {
 
-    @NonNull private final SQLiteDatabase mDatabase;
+    @NonNull private final DatabaseProxy mDatabase;
     @NonNull private final List<NoteColumns> mSearchColumns = Arrays.asList(NoteColumns.TITLE, NoteColumns.CONTENT);
+    @NonNull private final PublishSubject<Integer> updateEventsStream = PublishSubject.create();
 
     public NotesDao(@NonNull SQLiteDatabase db) {
         if (db.isReadOnly()) {
             throw new IllegalStateException("Database must be writable");
         }
-        mDatabase = db;
+        mDatabase = new DatabaseProxy(db, updateEventsStream);
+    }
+
+    public Observable<Integer> getDbObservable() {
+        return updateEventsStream;
     }
 
     @NonNull
@@ -217,5 +225,62 @@ public class NotesDao {
             todoList.append(i + 1).append(". TODO task number ").append(i + 1).append(";");
         }
         return todoList.toString();
+    }
+
+    private static class DatabaseProxy {
+
+        @NonNull private final SQLiteDatabase mLiteDatabase;
+        @NonNull private final PublishSubject<Integer> mUpdateEventsStream;
+
+        private DatabaseProxy(@NonNull SQLiteDatabase liteDatabase, @NonNull PublishSubject<Integer> updateEventsStream) {
+            mLiteDatabase = liteDatabase;
+            mUpdateEventsStream = updateEventsStream;
+        }
+
+        public int delete(String tableName, String where, String[] params) {
+            try {
+                int delete = mLiteDatabase.delete(tableName, where, params);
+                mUpdateEventsStream.onNext(delete);
+                return delete;
+            } catch (RuntimeException ex) {
+                mUpdateEventsStream.onError(ex);
+                return 0;
+            }
+        }
+
+        public void execSQL(String sql) {
+            try {
+                mLiteDatabase.execSQL(sql);
+                mUpdateEventsStream.onNext(1); //always update
+            } catch (RuntimeException ex) {
+                mUpdateEventsStream.onError(ex);
+            }
+        }
+
+        public int update(String tableName, ContentValues values, String where, String[] params) {
+            try {
+                int update = mLiteDatabase.update(tableName, values, where, params);
+                mUpdateEventsStream.onNext(update);
+                return update;
+            } catch (RuntimeException ex) {
+                mUpdateEventsStream.onError(ex);
+                return 0;
+            }
+        }
+
+        public long insert(String tableName, String nullColumnHack, ContentValues values) {
+            try {
+                long insert = mLiteDatabase.insert(tableName, nullColumnHack, values);
+                mUpdateEventsStream.onNext(1);
+                return insert;
+            } catch (RuntimeException ex) {
+                mUpdateEventsStream.onError(ex);
+                return -1;
+            }
+        }
+
+        public Cursor query(String tableName, String[] projection, String where, String[] whereParams, String groupBy, String having, String orderBy) {
+            return mLiteDatabase.query(tableName, projection, where, whereParams, groupBy, having, orderBy);
+        }
     }
 }

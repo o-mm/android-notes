@@ -21,8 +21,6 @@ import java.util.List;
 import java.util.Objects;
 
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Action;
-import io.reactivex.functions.Consumer;
 
 public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearchSortListener {
 
@@ -34,26 +32,28 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     @NonNull private final SyncInfo mSyncInfo = new SyncInfo();
     @Nullable private String mTerm;
     @Nullable private SortProperty mSortProperty;
-    @Nullable private NotesRepository.CancellableTask mLoadTask;
+    @Nullable private Disposable mLoadTask;
     @Nullable private Disposable mNotesSyncDisposable;
+    @NonNull private final Disposable mDbChanges;
     private boolean mDesc;
 
-    @NonNull private final Comparator defaultComparator = new Comparator<Comparable>() {
-        @Override
-        public int compare(Comparable o1, Comparable o2) {
-            if (o2 == null) {
-                return 1;
-            } else if (o1 == null) {
-                return -1;
-            } else {
-                return o1.compareTo(o2);
-            }
+    @NonNull private final Comparator defaultComparator =
+        (Comparator<Comparable>) (o1, o2) -> {
+        if (o2 == null) {
+            return 1;
+        } else if (o1 == null) {
+            return -1;
+        } else {
+            return o1.compareTo(o2);
         }
     };
 
     public ViewNotesVm(@NonNull NotesRepository repository) {
         mRepository = repository;
         setLastSyncText(getLastSyncFormatted());
+        mDbChanges = mRepository.getDbObservable().subscribe(next -> loadNotes(), error -> {
+            throw new RuntimeException(error);
+        });
     }
 
     public void init(@Nullable String term, @Nullable SortProperty sortProperty, boolean desc) {
@@ -69,12 +69,6 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     @NonNull
     public LiveData<List<NoteWrapper>> getNotes() {
         return mNotes;
-    }
-
-    public void refreshNotes() {
-        if (initialized) {
-            loadNotes();
-        }
     }
 
     @Override
@@ -117,19 +111,15 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     }
 
     public void startSyncTask() {
+        if (mNotesSyncDisposable != null && !mNotesSyncDisposable.isDisposed()) {
+            mNotesSyncDisposable.dispose();
+        }
         updateSyncStatus(null, true);
-        mNotesSyncDisposable = mRepository.syncNotes().subscribe(new Action() {
-            @Override
-            public void run() {
-                updateSyncStatus(SyncInfo.SyncResult.SUCCESS, false);
-                refreshNotes();
-            }
-        }, new Consumer<Throwable>() {
-            @Override
-            public void accept(Throwable ex) {
-                Log.e(TAG, ex.getMessage(), ex);
-                updateSyncStatus(SyncInfo.SyncResult.FAILED, false);
-            }
+        mNotesSyncDisposable = mRepository.syncNotes().subscribe(() -> {
+            updateSyncStatus(SyncInfo.SyncResult.SUCCESS, false);
+        }, ex -> {
+            Log.e(TAG, ex.getMessage(), ex);
+            updateSyncStatus(SyncInfo.SyncResult.FAILED, false);
         });
     }
 
@@ -165,16 +155,17 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     }
 
     private void loadNotes() {
-        if (mLoadTask != null) {
-            mLoadTask.cancel();
+        if (mLoadTask != null && !mLoadTask.isDisposed()) {
+            mLoadTask.dispose();
         }
-        mLoadTask = mRepository.loadNotes(new android.support.v4.util.Consumer<List<NoteWrapper>>() {
-            @Override
-            public void accept(List<NoteWrapper> notes) {
-                setNotes(reorderNotes(notes));
-                mLoadTask = null;
-            }
-        }, mTerm, mSortProperty, mDesc);
+        mLoadTask = mRepository.loadNotes(mTerm, mSortProperty, mDesc)
+            .subscribe((noteWrappers, throwable) -> {
+                if (throwable != null) {
+                    Log.e(TAG, throwable.getMessage(), throwable);
+                } else {
+                    mNotes.setValue(noteWrappers);
+                }
+            });
     }
 
     @NonNull
@@ -182,18 +173,15 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
         if (notes == null) {
             return Collections.emptyList();
         }
-        Collections.sort(notes, new Comparator<NoteWrapper>() {
-            @Override
-            public int compare(NoteWrapper o1, NoteWrapper o2) {
-                if (SortProperty.DATE.equals(mSortProperty)) {
-                    return Objects.compare(o1.getDate(), o2.getDate(), defaultComparator)
-                            * (mDesc ? -1 : 1);
-                } else if (SortProperty.TITLE.equals(mSortProperty)) {
-                    return Objects.compare(o1.getTitle(), o2.getTitle(), defaultComparator)
-                            * (mDesc ? -1 : 1);
-                } else {
-                    return 0;
-                }
+        Collections.sort(notes, (o1, o2) -> {
+            if (SortProperty.DATE.equals(mSortProperty)) {
+                return Objects.compare(o1.getDate(), o2.getDate(), defaultComparator)
+                        * (mDesc ? -1 : 1);
+            } else if (SortProperty.TITLE.equals(mSortProperty)) {
+                return Objects.compare(o1.getTitle(), o2.getTitle(), defaultComparator)
+                        * (mDesc ? -1 : 1);
+            } else {
+                return 0;
             }
         });
         return notes;
@@ -203,8 +191,11 @@ public class ViewNotesVm extends ViewModel implements SearchSortFragment.OnSearc
     protected void onCleared() {
         super.onCleared();
         cancelSyncTask();
-        if (mLoadTask != null) {
-            mLoadTask.cancel();
+        if (mLoadTask != null && !mLoadTask.isDisposed()) {
+            mLoadTask.dispose();
+        }
+        if (!mDbChanges.isDisposed()) {
+            mDbChanges.dispose();
         }
         mLoadTask = null;
     }
